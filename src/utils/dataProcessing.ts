@@ -1,6 +1,7 @@
 import Papa from 'papaparse';
 import { EnergyData, EnergyInterval } from '../types/energy';
 
+// Parses CSV data from a file or string input
 export const parseCSV = (input: File | string): Promise<EnergyData> => {
   return new Promise((resolve, reject) => {
     Papa.parse(input, {
@@ -10,10 +11,4 @@ export const parseCSV = (input: File | string): Promise<EnergyData> => {
       error: (error) => reject(error),
     });
   });
-};
-
-export const loadDefaultData = async (): Promise<EnergyData> => {
-  const res = await fetch('/low-winter-interval-data.csv');
-  const text = await res.text();
-  return parseCSV(text);
 };
