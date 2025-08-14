@@ -1,9 +1,14 @@
-import { useCallback } from 'react';
+import { ChangeEvent } from 'react';
 import { parseCSV } from '../utils/dataProcessing';
+import { EnergyData } from '../types/energy';
 
-function FileUploader({ onDataLoaded }) {
-  const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
+interface FileUploaderProps {
+  onDataLoaded: (data: EnergyData) => void;
+}
+
+function FileUploader({ onDataLoaded }: FileUploaderProps): React.ReactElement {
+  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>): Promise<void> => {
+    const file = event.target.files?.[0];
     if (!file) return;
 
     try {
