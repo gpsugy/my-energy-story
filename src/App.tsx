@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import FileUploader from './components/FileUploader';
+import EnergyChart from './components/EnergyChart';
 import { parseCSV } from './utils/dataProcessing';
 import { EnergyData } from './types/energy';
 import './App.css';
@@ -22,6 +23,7 @@ function App() {
     }
   };
 
+  // TODO: Improve redundancy with loadData
   useEffect(() => {
     const loadDefaultData = async () => {
       setIsLoading(true);
@@ -50,8 +52,12 @@ function App() {
         <div className="text-gray-600">Loading...</div>
       ) : (
         energyData && (
-          <div>
-            <pre className="text-xs rounded">{JSON.stringify(energyData[0], null, 2)}</pre>
+          <div className="space-y-6">
+            <EnergyChart data={energyData} mode={'daily'} />
+            <details className="text-xs">
+              <summary>Raw Data Sample</summary>
+              <pre className="mt-2 p-2 bg-gray-50 rounded">{JSON.stringify(energyData[0], null, 2)}</pre>
+            </details>
           </div>
         )
       )}
