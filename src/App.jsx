@@ -1,37 +1,34 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from 'react';
+import FileUploader from './components/FileUploader';
+import { loadDefaultData } from './utils/dataProcessing';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [energyData, setEnergyData] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await loadDefaultData();
+        setEnergyData(data);
+        console.log(data[0]);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchData();
+  }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1 class="text-3xl font-bold underline">
-      Hello world!
-  </h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div className="max-w-4xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">Energy Usage</h1>
 
-export default App
+      <div className="flex items-center space-x-4 mb-6">
+        <FileUploader onDataLoaded={setEnergyData} />
+      </div>
+
+      {energyData && <pre className="text-xs rounded">{JSON.stringify(energyData[0])}</pre>}
+    </div>
+  );
+}
+export default App;
