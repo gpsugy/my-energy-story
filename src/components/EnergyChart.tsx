@@ -14,7 +14,9 @@ interface EnergyChartProps {
 const normalizeValue = (val: number) => (val > 100 ? val / 1000 : val);
 
 export default function EnergyChart({ data, targetDate, onPrevDay, onNextDay }: EnergyChartProps) {
-  if (!targetDate) return null;
+  if (!targetDate) {
+    return null;
+  }
 
   // Filter to target day
   const dayData = data.filter((interval) => {
@@ -36,7 +38,9 @@ export default function EnergyChart({ data, targetDate, onPrevDay, onNextDay }: 
         date = interval.datetime;
       }
 
-      if (!date || isNaN(date.getTime())) return;
+      if (!date || isNaN(date.getTime())) {
+        return;
+      }
 
       if (date.getHours() === hour) {
         consumption += normalizeValue(interval.consumption);
@@ -48,20 +52,17 @@ export default function EnergyChart({ data, targetDate, onPrevDay, onNextDay }: 
       hour,
       consumption: Math.max(0, consumption),
       generation: Math.max(0, generation),
-      // Later: net = consumption - generation
+      // TODO: net = consumption - generation
     };
   });
 
   // Only show hours with data (or keep all for full day)
   const hasData = (d: any) => d.consumption > 0;
   const chartData = hourlyData.some(hasData) ? hourlyData : hourlyData.slice(0, 8);
-
-  // Format date for display
   const displayDate = format(targetDate, 'MMM d, yyyy');
 
   return (
     <div className="w-full bg-white rounded-lg shadow-sm p-6">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={onPrevDay}
@@ -79,15 +80,15 @@ export default function EnergyChart({ data, targetDate, onPrevDay, onNextDay }: 
           →
         </button>
       </div>
-
+      <h3 className="text-lg font-medium text-gray-900 mb-4">Hourly usage</h3>
       <div className="h-96">
         <ResponsiveContainer>
-          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 40, bottom: 20 }}>
+          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis
               dataKey="hour"
               tickFormatter={(hour) => format(new Date(2000, 0, 1, hour), 'ha')}
-              interval={2}  // Show every 3rd tick
+              interval={2} // Show every 3rd hour text (for cleanliness)
               axisLine={false}
               tick={{ fill: '#6B7280', fontSize: 12 }}
             />
@@ -95,22 +96,25 @@ export default function EnergyChart({ data, targetDate, onPrevDay, onNextDay }: 
               tickFormatter={(v) => `${v}`}
               axisLine={false}
               tick={{ fill: '#6B7280', fontSize: 12 }}
+              width={50}
+              label={{
+                value: 'kWh',
+                angle: -90,
+                position: 'insideLeft',
+                style: { fill: '#6B7280', fontSize: 12 },
+              }}
             />
             <Tooltip
               formatter={(value: number) => [`${value.toFixed(1)} kWh`, 'Consumption']}
               labelFormatter={(hour) => format(new Date(2000, 0, 1, Number(hour)), 'h:mm a')}
-              contentStyle={{ 
+              contentStyle={{
                 backgroundColor: 'white',
                 border: 'none',
                 borderRadius: '4px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
               }}
             />
-            <Bar 
-              dataKey="consumption" 
-              fill="#3b82f6"
-              radius={[4, 4, 0, 0]}
-            />
+            <Bar dataKey="consumption" fill="#3b82f6" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
