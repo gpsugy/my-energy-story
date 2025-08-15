@@ -8,16 +8,19 @@ export const parseCSV = (input: File | string): Promise<EnergyData> => {
       header: true,
       dynamicTyping: (field) => field !== 'datetime',
       complete: (results) => {
-        const data = results.data.map((row: any) => {
-          // Ensure we are dealing with kWh
-          const divideBy = (row.unit || '').toLowerCase() === 'wh' ? 1000 : 1;
-          return {
-            datetime: row.datetime,
-            duration: row.duration,
-            consumption: (row.consumption || 0) / divideBy,
-            generation: (row.generation || 0) / divideBy,
-          };
-        });
+        const data = results.data
+          // Filter out empty rows or rows without datetime
+          .filter((row: any) => row.datetime && Object.keys(row).length > 0)
+          .map((row: any) => {
+            // Ensure we are dealing with kWh
+            const divideBy = (row.unit || '').toLowerCase() === 'wh' ? 1000 : 1;
+            return {
+              datetime: row.datetime,
+              duration: row.duration,
+              consumption: (row.consumption || 0) / divideBy,
+              generation: (row.generation || 0) / divideBy,
+            };
+          });
         resolve(data as EnergyData);
       },
       error: reject,

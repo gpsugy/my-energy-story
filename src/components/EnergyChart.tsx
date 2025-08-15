@@ -1,58 +1,115 @@
-import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { startOfWeek, format } from 'date-fns';
+// EnergyChart.tsx
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { format, parseISO, isSameDay, addDays, subDays } from 'date-fns';
 import { EnergyData } from '../types/energy';
-
-type ChartMode = 'daily' | 'weekly';
 
 interface EnergyChartProps {
   data: EnergyData;
-  mode: ChartMode;
+  targetDate: Date | null;
+  onPrevDay: () => void;
+  onNextDay: () => void;
 }
 
-export default function EnergyChart({ data, mode }: EnergyChartProps) {
-  // Log the first few items to debug
-  console.log('First few data points:', data.slice(0, 3));
+// Normalize Wh → kWh
+const normalizeValue = (val: number) => (val > 100 ? val / 1000 : val);
 
-  // 🧹 Clear, readable aggregation
-  const aggregated: Record<string, { label: string; consumption: number; generation: number }> = {};
+export default function EnergyChart({ data, targetDate, onPrevDay, onNextDay }: EnergyChartProps) {
+  if (!targetDate) return null;
 
-  for (const interval of data) {
-    const date = new Date(interval.datetime);
+  // Filter to target day
+  const dayData = data.filter((interval) => {
+    const date = typeof interval.datetime === 'string' ? parseISO(interval.datetime) : interval.datetime;
+    return date && !isNaN(date.getTime()) && isSameDay(date, targetDate);
+  });
 
-    // Validate
-    if (!date || isNaN(date.getTime())) {
-      console.warn('Invalid date:', interval.datetime);
-      continue;
-    }
+  // Aggregate by hour (0–23)
+  const hourlyData = Array.from({ length: 24 }, (_, hour) => {
+    let consumption = 0;
+    let generation = 0;
 
-    // TODO: Dynamically change to weekly here
-    const key = format(date, 'yyyy-MM-dd');
-    if (!aggregated[key]) {
-      aggregated[key] = { label: key, consumption: 0, generation: 0 };
-    }
+    dayData.forEach((interval) => {
+      let date: Date;
 
-    aggregated[key].consumption += interval.consumption || 0;
-    aggregated[key].generation += interval.generation || 0;
-  }
+      if (typeof interval.datetime === 'string') {
+        date = parseISO(interval.datetime);
+      } else {
+        date = interval.datetime;
+      }
 
-  // 📊 Convert to sorted array
-  const chartData = Object.values(aggregated).sort((a, b) => a.label.localeCompare(b.label));
+      if (!date || isNaN(date.getTime())) return;
 
-  const maxY = Math.max(...chartData.map((d) => Math.max(d.consumption, d.generation)));
+      if (date.getHours() === hour) {
+        consumption += normalizeValue(interval.consumption);
+        generation += normalizeValue(interval.generation);
+      }
+    });
+
+    return {
+      hour,
+      consumption: Math.max(0, consumption),
+      generation: Math.max(0, generation),
+      // Later: net = consumption - generation
+    };
+  });
+
+  // Only show hours with data (or keep all for full day)
+  const hasData = (d: any) => d.consumption > 0;
+  const chartData = hourlyData.some(hasData) ? hourlyData : hourlyData.slice(0, 8);
+
+  // Format date for display
+  const displayDate = format(targetDate, 'MMM d, yyyy');
 
   return (
-    <div className="w-full h-80">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="label" />
-          <YAxis domain={[0, Math.ceil(maxY * 1.1)]} />
-          <Tooltip />
-          <Legend />
-          <Line type="monotone" dataKey="consumption" stroke="#8884d8" name="Consumption (kWh)" />
-          <Line type="monotone" dataKey="generation" stroke="#82ca9d" name="Generation (kWh)" />
-        </LineChart>
-      </ResponsiveContainer>
+    <div className="w-full">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <button
+          onClick={onPrevDay}
+          className="text-xl font-bold text-gray-700 hover:text-gray-900"
+          disabled={!targetDate}
+        >
+          ←
+        </button>
+        <h3 className="text-lg font-semibold">{displayDate}</h3>
+        <button
+          onClick={onNextDay}
+          className="text-xl font-bold text-gray-700 hover:text-gray-900"
+          disabled={!targetDate}
+        >
+          →
+        </button>
+      </div>
+
+      <div className="h-80">
+        <ResponsiveContainer>
+          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 30, bottom: 40 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey="hour"
+              tickFormatter={(hour) => format(new Date(2000, 0, 1, hour), 'h a')}
+              interval={0}
+              minTickGap={10}
+            />
+            <YAxis
+              label={{ value: 'kWh', angle: -90, position: 'insideLeft', offset: -10 }}
+              tickFormatter={(v) => `${v}k`}
+            />
+            <Tooltip
+              formatter={(value, name) => [
+                `${value.toFixed(2)} kWh`,
+                name === 'consumption' ? 'Consumption' : 'Generation',
+              ]}
+              labelFormatter={(label) => {
+                return `Hour: ${format(new Date(2000, 0, 1, Number(label)), 'h a')}`;
+              }}
+            />
+            {/* Only consumption now */}
+            <Bar dataKey="consumption" fill="#3b82f6" name="Consumption`" />
+            {/* Later: add generation as stacked bar */}
+            {/* <Bar dataKey="generation" fill="#16a34a" name="Generation" stackId="a" /> */}
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
