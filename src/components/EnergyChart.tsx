@@ -60,53 +60,57 @@ export default function EnergyChart({ data, targetDate, onPrevDay, onNextDay }: 
   const displayDate = format(targetDate, 'MMM d, yyyy');
 
   return (
-    <div className="w-full">
+    <div className="w-full bg-white rounded-lg shadow-sm p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-6">
         <button
           onClick={onPrevDay}
-          className="text-xl font-bold text-gray-700 hover:text-gray-900"
+          className="text-2xl text-gray-500 hover:text-gray-700 transition-colors"
           disabled={!targetDate}
         >
           ←
         </button>
-        <h3 className="text-lg font-semibold">{displayDate}</h3>
+        <h3 className="text-xl font-semibold text-gray-800">{displayDate}</h3>
         <button
           onClick={onNextDay}
-          className="text-xl font-bold text-gray-700 hover:text-gray-900"
+          className="text-2xl text-gray-500 hover:text-gray-700 transition-colors"
           disabled={!targetDate}
         >
           →
         </button>
       </div>
 
-      <div className="h-80">
+      <div className="h-96">
         <ResponsiveContainer>
-          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 30, bottom: 40 }}>
-            <CartesianGrid strokeDasharray="3 3" />
+          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 40, bottom: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis
               dataKey="hour"
-              tickFormatter={(hour) => format(new Date(2000, 0, 1, hour), 'h a')}
-              interval={0}
-              minTickGap={10}
+              tickFormatter={(hour) => format(new Date(2000, 0, 1, hour), 'ha')}
+              interval={2}  // Show every 3rd tick
+              axisLine={false}
+              tick={{ fill: '#6B7280', fontSize: 12 }}
             />
             <YAxis
-              label={{ value: 'kWh', angle: -90, position: 'insideLeft', offset: -10 }}
-              tickFormatter={(v) => `${v}k`}
+              tickFormatter={(v) => `${v}`}
+              axisLine={false}
+              tick={{ fill: '#6B7280', fontSize: 12 }}
             />
             <Tooltip
-              formatter={(value, name) => [
-                `${value.toFixed(2)} kWh`,
-                name === 'consumption' ? 'Consumption' : 'Generation',
-              ]}
-              labelFormatter={(label) => {
-                return `Hour: ${format(new Date(2000, 0, 1, Number(label)), 'h a')}`;
+              formatter={(value: number) => [`${value.toFixed(1)} kWh`, 'Consumption']}
+              labelFormatter={(hour) => format(new Date(2000, 0, 1, Number(hour)), 'h:mm a')}
+              contentStyle={{ 
+                backgroundColor: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
               }}
             />
-            {/* Only consumption now */}
-            <Bar dataKey="consumption" fill="#3b82f6" name="Consumption`" />
-            {/* Later: add generation as stacked bar */}
-            {/* <Bar dataKey="generation" fill="#16a34a" name="Generation" stackId="a" /> */}
+            <Bar 
+              dataKey="consumption" 
+              fill="#3b82f6"
+              radius={[4, 4, 0, 0]}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>
