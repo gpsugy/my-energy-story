@@ -1,5 +1,5 @@
 export interface EnergyInterval {
-  datetime: string;
+  datetime: Date;
   duration: number;
   unit: string;
   consumption: number;

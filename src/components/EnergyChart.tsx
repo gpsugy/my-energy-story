@@ -1,6 +1,6 @@
 // EnergyChart.tsx
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
-import { format, parseISO, isSameDay, addDays, subDays } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { EnergyData } from '../types/energy';
 
 interface EnergyChartProps {
@@ -19,10 +19,7 @@ export default function EnergyChart({ data, targetDate, onPrevDay, onNextDay }: 
   }
 
   // Filter to target day
-  const dayData = data.filter((interval) => {
-    const date = typeof interval.datetime === 'string' ? parseISO(interval.datetime) : interval.datetime;
-    return date && !isNaN(date.getTime()) && isSameDay(date, targetDate);
-  });
+  const dayData = data.filter((interval) => isSameDay(interval.datetime, targetDate));
 
   // Aggregate by hour (0–23)
   const hourlyData = Array.from({ length: 24 }, (_, hour) => {
@@ -30,19 +27,7 @@ export default function EnergyChart({ data, targetDate, onPrevDay, onNextDay }: 
     let generation = 0;
 
     dayData.forEach((interval) => {
-      let date: Date;
-
-      if (typeof interval.datetime === 'string') {
-        date = parseISO(interval.datetime);
-      } else {
-        date = interval.datetime;
-      }
-
-      if (!date || isNaN(date.getTime())) {
-        return;
-      }
-
-      if (date.getHours() === hour) {
+      if (interval.datetime.getHours() === hour) {
         consumption += normalizeValue(interval.consumption);
         generation += normalizeValue(interval.generation);
       }
@@ -114,7 +99,13 @@ export default function EnergyChart({ data, targetDate, onPrevDay, onNextDay }: 
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
               }}
             />
-            <Bar dataKey="consumption" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+            <Bar
+              dataKey="consumption"
+              fill="#3b82f6"
+              radius={[4, 4, 0, 0]}
+              isAnimationActive={false}
+              style={{ fill: '#3b82f6' }}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>

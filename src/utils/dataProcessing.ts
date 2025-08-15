@@ -1,29 +1,57 @@
 import Papa from 'papaparse';
-import { EnergyData } from '../types/energy';
+import { parseISO, isValid } from 'date-fns';
+import { EnergyData, EnergyInterval } from '../types/energy';
 
-// Parses CSV data from a file or string input
+interface RawEnergyRow {
+  datetime: string;
+  duration: string;
+  unit?: string;
+  consumption: string;
+  generation: string;
+}
+
 export const parseCSV = (input: File | string): Promise<EnergyData> => {
   return new Promise((resolve, reject) => {
-    Papa.parse(input, {
+    Papa.parse<RawEnergyRow>(input, {
       header: true,
-      dynamicTyping: (field) => field !== 'datetime',
+      dynamicTyping: false,
       complete: (results) => {
-        const data = results.data
-          // Filter out empty rows or rows without datetime
-          .filter((row: any) => row.datetime && Object.keys(row).length > 0)
-          .map((row: any) => {
-            // Ensure we are dealing with kWh
-            const divideBy = (row.unit || '').toLowerCase() === 'wh' ? 1000 : 1;
-            return {
-              datetime: row.datetime,
-              duration: row.duration,
-              consumption: (row.consumption || 0) / divideBy,
-              generation: (row.generation || 0) / divideBy,
-            };
+        const data: EnergyInterval[] = [];
+        for (const row of results.data) {
+          // Skip empty or invalid rows
+          if (!row.datetime || row.datetime.trim() === '') {
+            continue;
+          }
+
+          // Parse and validate date
+          const date = parseISO(row.datetime.trim());
+          if (!isValid(date)) {
+            console.warn('Invalid date skipped:', row.datetime);
+            continue;
+          }
+
+          // Normalize Wh → kWh and set unit
+          const unit = (row.unit || '').toLowerCase();
+          const divideBy = unit === 'wh' ? 1000 : 1;
+          const finalUnit = unit === 'wh' ? 'kWh' : unit || 'kWh';
+
+          const consumption = parseInt(row.consumption) || 0;
+          const generation = parseInt(row.generation) || 0;
+
+          data.push({
+            datetime: date,
+            duration: parseInt(row.duration, 10) || 900,
+            unit: finalUnit,
+            consumption: consumption / divideBy,
+            generation: generation / divideBy,
           });
-        resolve(data as EnergyData);
+        }
+
+        resolve(data);
       },
-      error: reject,
+      error: (error) => {
+        reject(error);
+      },
     });
   });
 };

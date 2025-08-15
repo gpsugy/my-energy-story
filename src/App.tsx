@@ -4,7 +4,7 @@ import FileUploader from './components/FileUploader';
 import EnergyChart from './components/EnergyChart';
 import { parseCSV } from './utils/dataProcessing';
 import { EnergyData } from './types/energy';
-import { parseISO, isValid } from 'date-fns';
+
 import './App.css';
 
 const DEFAULT_CSV_DATA_PATH = '/high-winter-interval-data.csv';
@@ -19,13 +19,9 @@ function App() {
       return;
     }
 
-    const initDate = energyData[energyData.length - 1];
-    const date = parseISO(initDate.datetime);
-    if (isValid(date)) {
-      setTargetDate(date);
-    } else {
-      console.warn('Invalid date in last row:', initDate.datetime);
-    }
+    // Set target date to the last date in the dataset
+    const lastInterval = energyData[energyData.length - 1];
+    setTargetDate(lastInterval.datetime);
   }, [energyData]);
 
   // Load specific CSV file
