@@ -2,6 +2,8 @@ import Papa from 'papaparse';
 import { parseISO, isValid } from 'date-fns';
 import { EnergyData, EnergyInterval } from '../types/energy';
 
+import { format, startOfWeek } from 'date-fns';
+
 interface RawEnergyRow {
   datetime: string;
   duration: string;
@@ -10,6 +12,14 @@ interface RawEnergyRow {
   generation: string;
 }
 
+export interface buildAggregateDataReturn {
+  dailyTotals: Map<string, number>;
+  weeklyTotals: Map<string, number>;
+  dailyKeys: string[];
+  weeklyKeys: string[];
+}
+
+// Parse a CSV file into typed EnergyData
 export const parseCSV = (input: File | string): Promise<EnergyData> => {
   return new Promise((resolve, reject) => {
     Papa.parse<RawEnergyRow>(input, {
@@ -54,4 +64,31 @@ export const parseCSV = (input: File | string): Promise<EnergyData> => {
       },
     });
   });
+};
+
+// Build and load various data structures related to aggregating data from raw (15-min interval) energy data
+export const buildAggregateData = (data: EnergyData): buildAggregateDataReturn => {
+  const dailyTotals = new Map<string, number>();
+  const weeklyTotals = new Map<string, number>();
+
+  for (const interval of data) {
+    // Daily key: '2023-09-08'
+    const dateKey = format(interval.datetime, 'yyyy-MM-dd');
+    dailyTotals.set(dateKey, (dailyTotals.get(dateKey) || 0) + interval.consumption);
+
+    // Weekly key: Monday of the week
+    const weekKey = format(startOfWeek(interval.datetime, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+    weeklyTotals.set(weekKey, (weeklyTotals.get(weekKey) || 0) + interval.consumption);
+  }
+
+  // Build sorted keys to access data
+  const dailyKeys = Array.from(dailyTotals.keys()).sort();
+  const weeklyKeys = Array.from(weeklyTotals.keys()).sort();
+
+  return {
+    dailyTotals,
+    weeklyTotals,
+    dailyKeys,
+    weeklyKeys,
+  };
 };

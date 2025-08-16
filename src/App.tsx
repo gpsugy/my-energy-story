@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import FileUploader from './components/FileUploader';
 import EnergyChart from './components/EnergyChart';
-import { parseCSV } from './utils/dataProcessing';
+import { buildAggregateData, parseCSV } from './utils/dataProcessing';
 import { EnergyData } from './types/energy';
 
 import './App.css';
@@ -11,17 +11,27 @@ const DEFAULT_CSV_DATA_PATH = '/high-winter-interval-data.csv';
 
 function App() {
   const [energyData, setEnergyData] = useState<EnergyData | null>(null);
+  const [dailyTotals, setDailyTotals] = useState<Map<string, number>>(new Map());
+  const [weeklyTotals, setWeeklyTotals] = useState<Map<string, number>>(new Map());
+  const [dailyKeys, setDailyKeys] = useState<string[]>([]);
+  const [weeklyKeys, setWeeklyKeys] = useState<string[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [grouping, setGrouping] = useState<'daily' | 'weekly'>('daily');
   const [isLoading, setIsLoading] = useState(false);
   const [targetDate, setTargetDate] = useState<Date | null>(null); // ← Add this
 
   useEffect(() => {
-    if (!energyData || energyData.length <= 0) {
-      return;
-    }
+    if (!energyData || energyData.length === 0) return;
 
-    // Set target date to the last date in the dataset
-    const lastInterval = energyData[energyData.length - 1];
-    setTargetDate(lastInterval.datetime);
+    const { dailyTotals, weeklyTotals, dailyKeys, weeklyKeys } = buildAggregateData(energyData);
+
+    setDailyTotals(dailyTotals);
+    setWeeklyTotals(weeklyTotals);
+    setDailyKeys(dailyKeys);
+    setWeeklyKeys(weeklyKeys);
+    // Start with most recent
+    setCurrentIndex(dailyKeys.length - 1);
+    setTargetDate(energyData[energyData.length - 1].datetime);
   }, [energyData]);
 
   // Load specific CSV file
