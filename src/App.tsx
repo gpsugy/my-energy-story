@@ -1,4 +1,3 @@
-// App.tsx
 import { useState, useEffect } from 'react';
 import FileUploader from './components/FileUploader';
 import EnergyChart from './components/EnergyChart';
@@ -18,7 +17,6 @@ function App() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [grouping, setGrouping] = useState<'daily' | 'weekly'>('daily');
   const [isLoading, setIsLoading] = useState(false);
-  const [targetDate, setTargetDate] = useState<Date | null>(null); // ← Add this
 
   useEffect(() => {
     if (!energyData || energyData.length === 0) return;
@@ -31,7 +29,6 @@ function App() {
     setWeeklyKeys(weeklyKeys);
     // Start with most recent
     setCurrentIndex(dailyKeys.length - 1);
-    setTargetDate(energyData[energyData.length - 1].datetime);
   }, [energyData]);
 
   // Load specific CSV file
@@ -64,14 +61,20 @@ function App() {
     loadDefaultData();
   }, []);
 
-  // Navigation handlers
-  const onPrevDay = () => targetDate && setTargetDate(new Date(targetDate.setDate(targetDate.getDate() - 1)));
-  const onNextDay = () => targetDate && setTargetDate(new Date(targetDate.setDate(targetDate.getDate() + 1)));
+  // Navigation
+  const onPrevDay = () => (currentIndex > 0 ? setCurrentIndex(currentIndex - 1) : null);
+  const onNextDay = () => (currentIndex < dailyKeys.length - 1 ? setCurrentIndex(currentIndex + 1) : null);
+
+  // Get current date string and Date object
+  const currentKey = dailyKeys[currentIndex] || null;
+  // const targetDate = currentKey ? new Date(currentKey) : null;
+
+  const isPrevDisabled = currentIndex === 0;
+  const isNextDisabled = !dailyKeys.length || currentIndex >= dailyKeys.length - 1;
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">My Energy Story</h1>
-
+      <h1 className="text-3xl font-bold mb-6">Energy Dashboard</h1>
       <div className="flex items-center space-x-4 mb-6">
         <FileUploader onFileSelect={(file) => loadData(file)} />
         <button
@@ -81,14 +84,21 @@ function App() {
           Load Default Data
         </button>
       </div>
-
       {isLoading ? (
         <div className="text-gray-600">Loading...</div>
-      ) : energyData ? (
-        <div className="space-y-6">
-          <EnergyChart data={energyData} targetDate={targetDate} onPrevDay={onPrevDay} onNextDay={onNextDay} />
-        </div>
-      ) : null}
+      ) : energyData && dailyKeys.length > 0 && currentIndex >= 0 ? (
+        <EnergyChart
+          data={energyData}
+          dailyKeys={dailyKeys}
+          currentIndex={currentIndex}
+          onPrevDay={onPrevDay}
+          onNextDay={onNextDay}
+          isPrevDisabled={isPrevDisabled}
+          isNextDisabled={isNextDisabled}
+        />
+      ) : (
+        <div className="text-gray-600">Loading...</div>
+      )}
     </div>
   );
 }

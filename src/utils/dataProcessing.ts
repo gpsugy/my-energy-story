@@ -1,5 +1,5 @@
 import Papa from 'papaparse';
-import { parseISO, isValid } from 'date-fns';
+import { parseISO, isSameDay, isValid } from 'date-fns';
 import { EnergyData, EnergyInterval } from '../types/energy';
 
 import { format, startOfWeek } from 'date-fns';
@@ -27,6 +27,11 @@ export const parseCSV = (input: File | string): Promise<EnergyData> => {
       dynamicTyping: false,
       complete: (results) => {
         const data: EnergyInterval[] = [];
+
+        if (results.data.length > 0) {
+          console.log('CSV parsed. First row:', results.data[0]);
+        }
+
         for (const row of results.data) {
           // Skip empty or invalid rows
           if (!row.datetime || row.datetime.trim() === '') {
@@ -91,4 +96,21 @@ export const buildAggregateData = (data: EnergyData): buildAggregateDataReturn =
     dailyKeys,
     weeklyKeys,
   };
+};
+
+// Aggregates 15-min data into hourly consumption for a single day
+export const getHourlyForDay = (data: EnergyData, targetDate: Date): Array<{ hour: number; consumption: number }> => {
+  const dayData = data.filter((interval) => isSameDay(interval.datetime, targetDate));
+
+  const hourly = Array.from({ length: 24 }, (_, hour) => ({
+    hour,
+    consumption: 0,
+  }));
+
+  for (const interval of dayData) {
+    const hour = interval.datetime.getHours();
+    hourly[hour].consumption += interval.consumption;
+  }
+
+  return hourly;
 };
