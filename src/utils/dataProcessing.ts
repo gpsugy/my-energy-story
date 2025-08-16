@@ -1,6 +1,6 @@
 import Papa from 'papaparse';
 import { parseISO, isSameDay, isValid, format, startOfWeek } from 'date-fns';
-import { EnergyData, EnergyInterval, GroupingType, ChartDataPointReturn } from '../types/energy';
+import { EnergyData, EnergyInterval } from '../types/energy';
 
 interface RawEnergyRow {
   datetime: string;
@@ -71,16 +71,15 @@ export const buildAggregateData = (data: EnergyData): buildAggregateDataReturn =
   const weeklyTotals = new Map<string, number>();
 
   for (const interval of data) {
-    // Daily key: '2023-09-08'
+    // Add to the total for the day
     const dateKey = format(interval.datetime, 'yyyy-MM-dd');
     dailyTotals.set(dateKey, (dailyTotals.get(dateKey) || 0) + interval.consumption);
 
-    // Weekly key: Monday of the week
+    // Add to the total for the week
     const weekKey = format(startOfWeek(interval.datetime, { weekStartsOn: 1 }), 'yyyy-MM-dd');
     weeklyTotals.set(weekKey, (weeklyTotals.get(weekKey) || 0) + interval.consumption);
   }
 
-  // Build sorted keys to access data
   const dailyKeys = Array.from(dailyTotals.keys()).sort();
   const weeklyKeys = Array.from(weeklyTotals.keys()).sort();
 
@@ -101,16 +100,18 @@ export const getDisplayDate = (currentKey: string, grouping: GroupingType): stri
   return `${format(start, 'MMM d')} – ${format(end, 'MMM d')}`;
 };
 
-// Aggregates 15-min data into hourly consumption for a single day
+// Aggregates 15-min data into hourly consumption for a given date
+// Returns: { hour: 0, consumption: 0.42 }, ... (24 items)
 export const getHourlyForDay = (data: EnergyData, targetDate: Date): Array<{ hour: number; consumption: number }> => {
+  // Get all 15-min interval data for a specific targetDate
   const dayData = data.filter((interval) => isSameDay(interval.datetime, targetDate));
-
-  const hourly = Array.from({ length: 24 }, (_, hour) => ({
-    hour,
-    consumption: 0,
-  }));
+  // Pre-initialize the return output with 0 consumption (data for an hour might not exist)
+  const hourly = Array(24)
+    .fill(0)
+    .map((_, i) => ({ hour: i, consumption: 0 }));
 
   for (const interval of dayData) {
+    // Get the hour of the day for this 15-min interval
     const hour = interval.datetime.getHours();
     hourly[hour].consumption += interval.consumption;
   }
@@ -118,11 +119,19 @@ export const getHourlyForDay = (data: EnergyData, targetDate: Date): Array<{ hou
   return hourly;
 };
 
-export const getWeeklyChartData = (weekStart: Date, dailyTotals: Map<string, number>): ChartDataPointReturn[] => {
+// Aggregates daily consumption totals for a given week
+// Returns: { day: 'Mon', consumption: 12.34 }, ... (7 items)
+export const getWeeklyChartData = (
+  weekStart: Date,
+  dailyTotals: Map<string, number>
+): { hour?: number; day?: string; consumption: number }[] => {
+  // Loop over 7 days
   return Array.from({ length: 7 }, (_, i) => {
     const date = new Date(weekStart);
     date.setDate(weekStart.getDate() + i);
+
     const dateKey = format(date, 'yyyy-MM-dd');
+
     return {
       day: format(date, 'EEE'),
       consumption: dailyTotals.get(dateKey) || 0,

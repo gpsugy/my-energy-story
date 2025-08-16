@@ -1,15 +1,37 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { format, parseISO } from 'date-fns';
-import { EnergyChartProps } from '../types/energy';
+import { EnergyData } from '../types/energy';
 import { getHourlyForDay, getDisplayDate, getWeeklyChartData } from '../utils/dataProcessing';
 import { useMemo } from 'react';
 
+export interface EnergyChartProps {
+  data: EnergyData;
+  keys: string[];
+  dailyTotals: Map<string, number>;
+  weeklyTotals: Map<string, number>;
+  grouping: 'daily' | 'weekly';
+  currentIndex: number;
+  onPrev: () => void;
+  onNext: () => void;
+  isPrevDisabled: boolean;
+  isNextDisabled: boolean;
+}
+
 export default function EnergyChart(props: EnergyChartProps) {
-  const { data, keys, dailyTotals, grouping, currentIndex, onPrev, onNext, isPrevDisabled, isNextDisabled } = props;
+  const {
+    data,
+    keys,
+    dailyTotals,
+    weeklyTotals,
+    grouping,
+    currentIndex,
+    onPrev,
+    onNext,
+    isPrevDisabled,
+    isNextDisabled,
+  } = props;
   const currentKey = keys[currentIndex];
   if (!currentKey) return null;
-
-  const displayDate = useMemo(() => getDisplayDate(currentKey, grouping), [currentKey, grouping]);
 
   const chartData = useMemo(() => {
     if (grouping === 'daily') {
@@ -30,7 +52,7 @@ export default function EnergyChart(props: EnergyChartProps) {
         >
           ←
         </button>
-        <h3 className="text-xl font-semibold text-gray-800">{displayDate}</h3>
+        <h3 className="text-xl font-semibold text-gray-800">{getDisplayDate(currentKey, grouping)}</h3>
         <button
           onClick={onNext}
           disabled={isNextDisabled}

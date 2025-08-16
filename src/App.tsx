@@ -10,10 +10,10 @@ const DEFAULT_CSV_DATA_PATH = '/high-winter-interval-data.csv';
 
 function App() {
   const [energyData, setEnergyData] = useState<EnergyData | null>(null);
-  const [dailyTotals, setDailyTotals] = useState<Map<string, number>>(new Map());
-  const [weeklyTotals, setWeeklyTotals] = useState<Map<string, number>>(new Map());
-  const [dailyKeys, setDailyKeys] = useState<string[]>([]);
-  const [weeklyKeys, setWeeklyKeys] = useState<string[]>([]);
+  const [dailyTotals, setDailyTotals] = useState<Map<string, number>>(new Map()); // { '2023-09-08': 30, ... }
+  const [weeklyTotals, setWeeklyTotals] = useState<Map<string, number>>(new Map()); // { '2023-09-04': 150, ... }
+  const [dailyKeys, setDailyKeys] = useState<string[]>([]); // [ '2023-09-08', '2023-09-09', ... ]
+  const [weeklyKeys, setWeeklyKeys] = useState<string[]>([]); // [ '2023-09-04', '2023-09-11', ... ]
   const [currentIndex, setCurrentIndex] = useState(0);
   const [grouping, setGrouping] = useState<'daily' | 'weekly'>('daily');
 
@@ -57,17 +57,21 @@ function App() {
     loadDefaultData();
   }, []);
 
-  // Navigation
+  // Derived state - leave in the render
   const currentKeys = grouping === 'daily' ? dailyKeys : weeklyKeys;
   const onPrev = () => (currentIndex > 0 ? setCurrentIndex(currentIndex - 1) : null);
   const onNext = () => (currentIndex < currentKeys.length - 1 ? setCurrentIndex(currentIndex + 1) : null);
   const isPrevDisabled = currentIndex === 0;
   const isNextDisabled = currentIndex >= currentKeys.length - 1;
 
+  const groupingTabClassNames = (isActive: boolean) =>
+    `px-4 py-2 text-sm font-medium transition-colors ${
+      isActive ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+    }`;
+
   return (
     <div className="max-w-6xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">My Energy Story</h1>
-
       <div className="flex items-center space-x-4 mb-6">
         <FileUploader onFileSelect={(file) => loadData(file)} />
         <button
@@ -81,11 +85,10 @@ function App() {
         <button
           onClick={() => {
             setGrouping('daily');
+            // Necessary to prevent a race condition
             setCurrentIndex(dailyKeys.length - 1);
           }}
-          className={`px-4 py-2 text-sm font-medium rounded-l-lg transition-colors ${
-            grouping === 'daily' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
+          className={`${groupingTabClassNames(grouping === 'daily')} rounded-l-lg`}
         >
           DAY
         </button>
@@ -94,16 +97,13 @@ function App() {
             setGrouping('weekly');
             setCurrentIndex(weeklyKeys.length - 1);
           }}
-          className={`px-4 py-2 text-sm font-medium rounded-r-lg transition-colors ${
-            grouping === 'weekly' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
+          className={`${groupingTabClassNames(grouping === 'weekly')} rounded-r-lg`}
         >
           WEEK
         </button>
       </div>
 
-      {energyData &&
-      ((grouping === 'daily' && dailyKeys.length > 0) || (grouping === 'weekly' && weeklyKeys.length > 0)) ? (
+      {energyData ? (
         <EnergyChart
           data={energyData}
           keys={grouping === 'daily' ? dailyKeys : weeklyKeys}
