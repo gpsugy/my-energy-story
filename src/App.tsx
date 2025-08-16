@@ -6,12 +6,16 @@ import { EnergyData } from './types/energy';
 
 import './App.css';
 
-const DEFAULT_CSV_DATA_PATH = '/high-winter-interval-data.csv';
+const DEFAULT_CSV_DATA_PATH = '/solar-interval-data.csv';
+export const APP_TEXT_COLOR = '#434343ff';
+export const APP_CONSUMPTION_COLOR = '#3b82f6ff';
+export const APP_SOLAR_COLOR = '#fba824ff';
 
 function App() {
   const [energyData, setEnergyData] = useState<EnergyData | null>(null);
-  const [dailyTotals, setDailyTotals] = useState<Map<string, number>>(new Map()); // { '2023-09-08': 30, ... }
-  const [weeklyTotals, setWeeklyTotals] = useState<Map<string, number>>(new Map()); // { '2023-09-04': 150, ... }
+  const [dailyConsumption, setdailyConsumption] = useState<Map<string, number>>(new Map()); // { '2023-09-08': 30, ... }
+  const [dailyGenerations, setDailyGenerations] = useState<Map<string, number>>(new Map()); // { '2023-09-08': 20, ... }
+  const [weeklyConsumption, setweeklyConsumption] = useState<Map<string, number>>(new Map()); // { '2023-09-04': 150, ... }
   const [dailyKeys, setDailyKeys] = useState<string[]>([]); // [ '2023-09-08', '2023-09-09', ... ]
   const [weeklyKeys, setWeeklyKeys] = useState<string[]>([]); // [ '2023-09-04', '2023-09-11', ... ]
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -20,10 +24,12 @@ function App() {
   useEffect(() => {
     if (!energyData || energyData.length === 0) return;
 
-    const { dailyTotals, weeklyTotals, dailyKeys, weeklyKeys } = buildAggregateData(energyData);
+    const { dailyConsumption, dailyGenerations, weeklyConsumption, dailyKeys, weeklyKeys } =
+      buildAggregateData(energyData);
 
-    setDailyTotals(dailyTotals);
-    setWeeklyTotals(weeklyTotals);
+    setdailyConsumption(dailyConsumption);
+    setDailyGenerations(dailyGenerations);
+    setweeklyConsumption(weeklyConsumption);
     setDailyKeys(dailyKeys);
     setWeeklyKeys(weeklyKeys);
 
@@ -107,8 +113,9 @@ function App() {
         <EnergyChart
           data={energyData}
           keys={grouping === 'daily' ? dailyKeys : weeklyKeys}
-          dailyTotals={dailyTotals}
-          weeklyTotals={weeklyTotals}
+          dailyConsumption={dailyConsumption}
+          dailyGenerations={dailyGenerations}
+          weeklyConsumption={weeklyConsumption}
           grouping={grouping}
           currentIndex={currentIndex}
           onPrev={onPrev}
