@@ -1,24 +1,24 @@
-import { ChangeEvent } from 'react';
-
 interface FileUploaderProps {
-  onFileSelect: (file: File) => Promise<void>;
+  onFileSelect: (file: File) => void;
+  buttonClass?: string;
 }
 
-function FileUploader({ onFileSelect }: FileUploaderProps): React.ReactElement {
-  const handleFileUpload = (event: ChangeEvent<HTMLInputElement>): void => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      return;
+export default function FileUploader({
+  onFileSelect,
+  buttonClass = 'bg-blue-600 text-white hover:bg-blue-700',
+}: FileUploaderProps) {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      onFileSelect(e.target.files[0]);
     }
-
-    onFileSelect(file);
   };
 
   return (
     <div>
-      <input type="file" accept=".csv" onChange={handleFileUpload} />
+      <label className={`cursor-pointer px-4 py-2 rounded text-sm font-medium ${buttonClass}`}>
+        Upload CSV
+        <input type="file" accept=".csv" onChange={handleChange} className="sr-only" />
+      </label>
     </div>
   );
 }
-
-export default FileUploader;

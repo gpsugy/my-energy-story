@@ -163,6 +163,7 @@ export const getWeeklyChartData = (
       consumption,
       generation,
       netConsumption,
+      // Set fill color (Recharts expects a string when using fill)
       fill: netConsumption >= 0 ? APP_CONSUMPTION_COLOR : APP_SOLAR_COLOR,
     };
   });

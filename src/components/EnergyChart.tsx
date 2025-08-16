@@ -20,19 +20,7 @@ export interface EnergyChartProps {
 }
 
 export default function EnergyChart(props: EnergyChartProps) {
-  const {
-    data,
-    keys,
-    dailyConsumption,
-    dailyGenerations,
-    weeklyConsumption,
-    grouping,
-    currentIndex,
-    onPrev,
-    onNext,
-    isPrevDisabled,
-    isNextDisabled,
-  } = props;
+  const { data, keys, dailyConsumption, dailyGenerations, grouping, currentIndex } = props;
   const currentKey = keys[currentIndex];
   if (!currentKey) return null;
 
@@ -44,33 +32,10 @@ export default function EnergyChart(props: EnergyChartProps) {
   }, [currentKey, grouping, data, dailyConsumption, dailyGenerations]);
 
   return (
-    <div className="w-full bg-white rounded-lg shadow-sm p-6">
-      <div className="flex items-center justify-between mb-6">
-        <button
-          onClick={onPrev}
-          disabled={isPrevDisabled}
-          className={`text-2xl transition-colors ${
-            isPrevDisabled ? 'text-gray-400 cursor-not-allowed' : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          ←
-        </button>
-        <h3 className="text-xl font-semibold text-gray-800">{getDisplayDate(currentKey, grouping)}</h3>
-        <button
-          onClick={onNext}
-          disabled={isNextDisabled}
-          className={`text-2xl transition-colors ${
-            isNextDisabled ? 'text-gray-400 cursor-not-allowed' : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          →
-        </button>
-      </div>
-      <h3 className="text-lg font-medium text-gray-900 mb-4">
-        {grouping === 'daily' ? 'Hourly usage' : 'Daily usage'}
-      </h3>
-      <div className="h-96">
-        <ResponsiveContainer>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-full">
+      <h3 className="text-xl font-semibold text-gray-800 mb-6">Energy Usage</h3>
+      <div className="h-96 lg:h-[400px]">
+        <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
 
