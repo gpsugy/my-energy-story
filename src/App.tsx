@@ -26,9 +26,12 @@ function App() {
     setWeeklyTotals(weeklyTotals);
     setDailyKeys(dailyKeys);
     setWeeklyKeys(weeklyKeys);
+
+    const keys = grouping === 'daily' ? dailyKeys : weeklyKeys;
+    const newIndex = keys.length - 1;
     // Start with most recent
-    setCurrentIndex(dailyKeys.length - 1);
-  }, [energyData]);
+    setCurrentIndex(newIndex >= 0 ? newIndex : 0);
+  }, [energyData, grouping]);
 
   // Load specific CSV file
   const loadData = async (source: File | string): Promise<void> => {

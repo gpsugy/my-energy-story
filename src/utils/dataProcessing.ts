@@ -1,8 +1,6 @@
 import Papa from 'papaparse';
-import { parseISO, isSameDay, isValid } from 'date-fns';
-import { EnergyData, EnergyInterval } from '../types/energy';
-
-import { format, startOfWeek } from 'date-fns';
+import { parseISO, isSameDay, isValid, format, startOfWeek } from 'date-fns';
+import { EnergyData, EnergyInterval, GroupingType, ChartDataPointReturn } from '../types/energy';
 
 interface RawEnergyRow {
   datetime: string;
@@ -27,10 +25,6 @@ export const parseCSV = (input: File | string): Promise<EnergyData> => {
       dynamicTyping: false,
       complete: (results) => {
         const data: EnergyInterval[] = [];
-
-        if (results.data.length > 0) {
-          console.log('CSV parsed. First row:', results.data[0]);
-        }
 
         for (const row of results.data) {
           // Skip empty or invalid rows
@@ -98,6 +92,15 @@ export const buildAggregateData = (data: EnergyData): buildAggregateDataReturn =
   };
 };
 
+export const getDisplayDate = (currentKey: string, grouping: GroupingType): string => {
+  if (grouping === 'daily') return format(parseISO(currentKey), 'MMM d, yyyy');
+
+  const start = parseISO(currentKey);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  return `${format(start, 'MMM d')} – ${format(end, 'MMM d')}`;
+};
+
 // Aggregates 15-min data into hourly consumption for a single day
 export const getHourlyForDay = (data: EnergyData, targetDate: Date): Array<{ hour: number; consumption: number }> => {
   const dayData = data.filter((interval) => isSameDay(interval.datetime, targetDate));
@@ -113,4 +116,16 @@ export const getHourlyForDay = (data: EnergyData, targetDate: Date): Array<{ hou
   }
 
   return hourly;
+};
+
+export const getWeeklyChartData = (weekStart: Date, dailyTotals: Map<string, number>): ChartDataPointReturn[] => {
+  return Array.from({ length: 7 }, (_, i) => {
+    const date = new Date(weekStart);
+    date.setDate(weekStart.getDate() + i);
+    const dateKey = format(date, 'yyyy-MM-dd');
+    return {
+      day: format(date, 'EEE'),
+      consumption: dailyTotals.get(dateKey) || 0,
+    };
+  });
 };

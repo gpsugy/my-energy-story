@@ -1,72 +1,22 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { format, parseISO } from 'date-fns';
-import { EnergyData } from '../types/energy';
-import { getHourlyForDay } from '../utils/dataProcessing';
+import { EnergyChartProps } from '../types/energy';
+import { getHourlyForDay, getDisplayDate, getWeeklyChartData } from '../utils/dataProcessing';
+import { useMemo } from 'react';
 
-interface EnergyChartProps {
-  data: EnergyData;
-  // dailyKeys or weeklyKeys
-  keys: string[];
-  dailyTotals: Map<string, number>;
-  weeklyTotals: Map<string, number>;
-  grouping: 'daily' | 'weekly';
-  currentIndex: number;
-  onPrev: () => void;
-  onNext: () => void;
-  isPrevDisabled: boolean;
-  isNextDisabled: boolean;
-}
-
-export default function EnergyChart({
-  data,
-  keys,
-  dailyTotals,
-  weeklyTotals,
-  grouping,
-  currentIndex,
-  onPrev,
-  onNext,
-  isPrevDisabled,
-  isNextDisabled,
-}: EnergyChartProps) {
+export default function EnergyChart(props: EnergyChartProps) {
+  const { data, keys, dailyTotals, grouping, currentIndex, onPrev, onNext, isPrevDisabled, isNextDisabled } = props;
   const currentKey = keys[currentIndex];
   if (!currentKey) return null;
 
-  const displayDate =
-    grouping === 'daily'
-      ? format(parseISO(currentKey), 'MMM d, yyyy')
-      : (() => {
-          const start = parseISO(currentKey);
-          const end = new Date(start);
-          end.setDate(start.getDate() + 6);
-          return `${format(start, 'MMM d')} – ${format(end, 'MMM d')}`;
-        })();
+  const displayDate = useMemo(() => getDisplayDate(currentKey, grouping), [currentKey, grouping]);
 
-  // Chart data
-  let chartData;
-  let xAxisLabel;
-
-  if (grouping === 'daily') {
-    const targetDate = parseISO(currentKey);
-    chartData = getHourlyForDay(data, targetDate);
-    xAxisLabel = 'Hour';
-  } else {
-    const weekStart = parseISO(currentKey);
-    chartData = [];
-    // Weekly view: show 7 days/bars
-    for (let i = 0; i < 7; i++) {
-      // weeklyKeys are keyed by the start of the week (Monday)
-      const date = new Date(weekStart);
-      date.setDate(weekStart.getDate() + i);
-      const dateKey = format(date, 'yyyy-MM-dd');
-      const consumption = dailyTotals.get(dateKey) || 0;
-      chartData.push({
-        day: format(date, 'EEE'),
-        consumption,
-      });
+  const chartData = useMemo(() => {
+    if (grouping === 'daily') {
+      return getHourlyForDay(data, parseISO(currentKey));
     }
-    xAxisLabel = 'Day';
-  }
+    return getWeeklyChartData(parseISO(currentKey), dailyTotals);
+  }, [currentKey, grouping, data, dailyTotals]);
 
   return (
     <div className="w-full bg-white rounded-lg shadow-sm p-6">
