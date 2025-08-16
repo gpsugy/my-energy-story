@@ -16,7 +16,6 @@ function App() {
   const [weeklyKeys, setWeeklyKeys] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [grouping, setGrouping] = useState<'daily' | 'weekly'>('daily');
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!energyData || energyData.length === 0) return;
@@ -33,20 +32,16 @@ function App() {
 
   // Load specific CSV file
   const loadData = async (source: File | string): Promise<void> => {
-    setIsLoading(true);
     try {
       const data = await parseCSV(source);
       setEnergyData(data);
     } catch (err) {
       console.error('Error loading data:', err);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     const loadDefaultData = async () => {
-      setIsLoading(true);
       try {
         const res = await fetch(DEFAULT_CSV_DATA_PATH);
         const text = await res.text();
@@ -54,27 +49,22 @@ function App() {
         setEnergyData(data);
       } catch (err) {
         console.error('Error loading default data:', err);
-      } finally {
-        setIsLoading(false);
       }
     };
     loadDefaultData();
   }, []);
 
   // Navigation
-  const onPrevDay = () => (currentIndex > 0 ? setCurrentIndex(currentIndex - 1) : null);
-  const onNextDay = () => (currentIndex < dailyKeys.length - 1 ? setCurrentIndex(currentIndex + 1) : null);
-
-  // Get current date string and Date object
-  const currentKey = dailyKeys[currentIndex] || null;
-  // const targetDate = currentKey ? new Date(currentKey) : null;
-
+  const currentKeys = grouping === 'daily' ? dailyKeys : weeklyKeys;
+  const onPrev = () => (currentIndex > 0 ? setCurrentIndex(currentIndex - 1) : null);
+  const onNext = () => (currentIndex < currentKeys.length - 1 ? setCurrentIndex(currentIndex + 1) : null);
   const isPrevDisabled = currentIndex === 0;
-  const isNextDisabled = !dailyKeys.length || currentIndex >= dailyKeys.length - 1;
+  const isNextDisabled = currentIndex >= currentKeys.length - 1;
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Energy Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-6">My Energy Story</h1>
+
       <div className="flex items-center space-x-4 mb-6">
         <FileUploader onFileSelect={(file) => loadData(file)} />
         <button
@@ -84,15 +74,42 @@ function App() {
           Load Default Data
         </button>
       </div>
-      {isLoading ? (
-        <div className="text-gray-600">Loading...</div>
-      ) : energyData && dailyKeys.length > 0 && currentIndex >= 0 ? (
+      <div className="flex items-center space-x-1 mb-6">
+        <button
+          onClick={() => {
+            setGrouping('daily');
+            setCurrentIndex(dailyKeys.length - 1);
+          }}
+          className={`px-4 py-2 text-sm font-medium rounded-l-lg transition-colors ${
+            grouping === 'daily' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          DAY
+        </button>
+        <button
+          onClick={() => {
+            setGrouping('weekly');
+            setCurrentIndex(weeklyKeys.length - 1);
+          }}
+          className={`px-4 py-2 text-sm font-medium rounded-r-lg transition-colors ${
+            grouping === 'weekly' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          WEEK
+        </button>
+      </div>
+
+      {energyData &&
+      ((grouping === 'daily' && dailyKeys.length > 0) || (grouping === 'weekly' && weeklyKeys.length > 0)) ? (
         <EnergyChart
           data={energyData}
-          dailyKeys={dailyKeys}
+          keys={grouping === 'daily' ? dailyKeys : weeklyKeys}
+          dailyTotals={dailyTotals}
+          weeklyTotals={weeklyTotals}
+          grouping={grouping}
           currentIndex={currentIndex}
-          onPrevDay={onPrevDay}
-          onNextDay={onNextDay}
+          onPrev={onPrev}
+          onNext={onNext}
           isPrevDisabled={isPrevDisabled}
           isNextDisabled={isNextDisabled}
         />
