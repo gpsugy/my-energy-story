@@ -181,6 +181,7 @@ function App() {
               currentKey={currentKey}
               dailyConsumption={dailyConsumption}
               dailyGenerations={dailyGenerations}
+              weeklyConsumption={weeklyConsumption}
             />
           </div>
         </div>

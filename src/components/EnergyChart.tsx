@@ -1,7 +1,7 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { EnergyData } from '../types/energy';
-import { getHourlyForDay, getDisplayDate, getWeeklyChartData } from '../utils/dataProcessing';
+import { getHourlyForDay, getWeeklyChartData } from '../utils/dataProcessing';
 import { useMemo } from 'react';
 import { APP_CONSUMPTION_COLOR, APP_SOLAR_COLOR, APP_TEXT_COLOR } from '../App';
 
@@ -61,7 +61,6 @@ export default function EnergyChart(props: EnergyChartProps) {
               }}
             />
 
-            {/* Zero line */}
             <ReferenceLine y={0} stroke={APP_TEXT_COLOR} strokeDasharray="3 3" />
             {/* Need to customize Tooltip for differentiating styling for +/- */}
             <Tooltip
