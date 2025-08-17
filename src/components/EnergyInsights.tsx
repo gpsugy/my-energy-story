@@ -96,7 +96,7 @@ export default function EnergyInsights({
           className="flex-1 flex flex-col items-center justify-center py-2 px-4 border border-gray-200 rounded-lg bg-gray-50 aspect-square max-h-32"
           style={{ color: APP_CONSUMPTION_COLOR }}
         >
-          <span className="text-sm font-medium text-gray-700">Total Energy Used</span>
+          <span className="text-sm font-medium text-gray-700">Energy Used</span>
           <span className="text-lg font-bold mt-1">{formatKWh(totalConsumption)}</span>
         </div>
         <div

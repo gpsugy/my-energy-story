@@ -88,7 +88,7 @@ export default function EnergyChart(props: EnergyChartProps) {
                         <strong>
                           {isNegative ? '↓' : '↑'} {abs} kWh
                         </strong>
-                        <span style={{ marginLeft: '8px' }}>{isNegative ? 'Energy Consumed' : 'Energy Generated'}</span>
+                        <span style={{ marginLeft: '8px' }}>{isNegative ? 'Solar Generated' : 'Energy Used'}</span>
                       </p>
                     </div>
                   );

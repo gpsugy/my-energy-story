@@ -80,9 +80,9 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-emerald-600 px-6 py-4 shadow">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="bg-gray-100">
+      <header className="bg-emerald-600 px-8 py-4 shadow">
+        <div className="flex flex-wrap items-center justify-between gap-4 max-w-[2400px] mx-auto">
           {/* Date + Navigation */}
           <div className="flex items-center space-x-4">
             <button
@@ -157,9 +157,9 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <div className="lg:col-span-3">
+      <main className="max-w-[2400px] mx-auto px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-8">
             <EnergyChart
               data={energyData!}
               keys={currentKeys}
@@ -174,7 +174,7 @@ function App() {
               isNextDisabled={isNextDisabled}
             />
           </div>
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-4">
             <EnergyInsights
               grouping={grouping}
               currentKey={currentKey}
