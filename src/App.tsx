@@ -115,7 +115,7 @@ function App() {
             </button>
           </div>
 
-          {/* View Toggle */}
+          {/* Grouping Toggle */}
           <div className="flex items-center space-x-1 bg-transparent">
             <button
               onClick={() => {
@@ -141,7 +141,6 @@ function App() {
             </button>
           </div>
 
-          {/* File Upload */}
           <div className="flex items-center space-x-6">
             <FileUploader
               onFileSelect={(file) => loadData(file)}

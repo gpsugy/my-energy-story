@@ -1,4 +1,5 @@
-import { format, parseISO } from 'date-fns';
+// components/EnergyInsights.tsx
+import { format, parseISO, startOfWeek } from 'date-fns';
 import { APP_CONSUMPTION_COLOR, APP_SOLAR_COLOR } from '../App';
 
 export default function EnergyInsights({
@@ -20,16 +21,20 @@ export default function EnergyInsights({
     return kwh >= 0 ? `+${abs}` : `-${abs}`;
   };
 
-  let totalConsumption = 0;
-  let totalSolar = 0;
-  let comparisonLabel = '';
-  let diff = 0;
-  let diffColor = '';
+  let totalConsumption = 0,
+    totalSolar = 0,
+    comparisonLabel = '',
+    diff = 0,
+    diffColor = '',
+    avgLabel = '',
+    avgDiff = 0,
+    avgDiffColor = '';
 
   if (grouping === 'daily') {
     totalConsumption = dailyConsumption.get(currentKey) || 0;
     totalSolar = dailyGenerations.get(currentKey) || 0;
 
+    // --- Vs Yesterday ---
     const dailyKeys = Array.from(dailyConsumption.keys()).sort();
     const currentIndex = dailyKeys.indexOf(currentKey);
     const prevKey = dailyKeys[currentIndex - 1];
@@ -39,6 +44,15 @@ export default function EnergyInsights({
       diff = totalConsumption - yesterdayConsumption;
       comparisonLabel = 'than yesterday';
     }
+
+    // --- Vs Average This Week ---
+    const weekStart = startOfWeek(parseISO(currentKey), { weekStartsOn: 1 });
+    const weekKey = format(weekStart, 'yyyy-MM-dd');
+    const weeklyTotal = weeklyConsumption.get(weekKey) || 0;
+    const weeklyAvg = weeklyTotal / 7;
+
+    avgDiff = totalConsumption - weeklyAvg;
+    avgLabel = 'than average this week';
   } else {
     const weekStart = parseISO(currentKey);
     for (let i = 0; i < 7; i++) {
@@ -49,6 +63,7 @@ export default function EnergyInsights({
       totalSolar += dailyGenerations.get(dateKey) || 0;
     }
 
+    // --- Vs Last Week ---
     const weeklyKeys = Array.from(weeklyConsumption.keys()).sort();
     const currentIndex = weeklyKeys.indexOf(currentKey);
     const lastWeekKey = weeklyKeys[currentIndex - 1];
@@ -59,9 +74,19 @@ export default function EnergyInsights({
       diff = thisWeekConsumption - lastWeekConsumption;
       comparisonLabel = 'than last week';
     }
+
+    // --- Vs Average This Month ---
+    const weeklyValues = Array.from(weeklyConsumption.values());
+    // Calculate the average weekly consumption for the month
+    const monthlyAvg = weeklyValues.reduce((a, b) => a + b, 0) / weeklyValues.length;
+
+    avgDiff = thisWeekConsumption - monthlyAvg;
+    avgLabel = 'than average this month';
   }
 
+  // Set colors: red if worse (used more), green if better
   diffColor = diff > 0 ? 'text-red-600' : 'text-green-600';
+  avgDiffColor = avgDiff > 0 ? 'text-red-600' : 'text-green-600';
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-full">
@@ -82,15 +107,24 @@ export default function EnergyInsights({
           <span className="text-lg font-bold mt-1">{formatKWh(totalSolar)}</span>
         </div>
       </div>
-      {comparisonLabel && (
+      {(comparisonLabel || avgLabel) && (
         <div className="flex space-x-4">
-          <div className="flex-1 flex flex-col items-center justify-center py-2 px-4 border border-gray-200 rounded-lg bg-gray-50 aspect-square max-h-32">
-            <div className="text-center mt-1">
-              <span className={`font-bold ${diffColor}`}>{formatDiff(diff)} kWh</span>
-              <span className="text-sm font-medium text-gray-700 block mt-0.5">{comparisonLabel}</span>
+          {comparisonLabel && (
+            <div className="flex-1 flex flex-col items-center justify-center py-2 px-4 border border-gray-200 rounded-lg bg-gray-50 aspect-square max-h-32">
+              <div className="text-center mt-1">
+                <span className={`font-bold ${diffColor}`}>{formatDiff(diff)} kWh</span>
+                <span className="text-sm font-medium text-gray-700 block mt-0.5">{comparisonLabel}</span>
+              </div>
             </div>
-          </div>
-          <div className="flex-1"></div>
+          )}
+          {avgLabel && (
+            <div className="flex-1 flex flex-col items-center justify-center py-2 px-4 border border-gray-200 rounded-lg bg-gray-50 aspect-square max-h-32">
+              <div className="text-center mt-1">
+                <span className={`font-bold ${avgDiffColor}`}>{formatDiff(avgDiff)} kWh</span>
+                <span className="text-sm font-medium text-gray-700 block mt-0.5">{avgLabel}</span>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
