@@ -1,12 +1,116 @@
-# React + Vite
+# ⚡ My Energy Story
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A clean React dashboard that helps users understand their electricity usage and solar generation, based on **15-minute smart meter interval data**.
 
-Currently, two official plugins are available:
+Instead of staring at rows of CSV data, customers get an **interactive, performant, visual story** of when and how they use energy — with insights that would be of particular helpfulness to energy users.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+## 📸 Screenshots
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Daily View
+
+![Desktop View (Daily)](./public/desktop-view-daily.png)
+
+### Weekly View
+
+![Desktop View (Weekly)](./public/desktop-view-weekly.png)
+
+---
+
+## ✨ Features
+
+### 📊 Charts
+
+**Daily View**
+
+- Hour-by-hour breakdown of energy use and solar generation
+- Spot usage spikes (mornings, evenings, etc.)
+
+**Weekly View**
+
+- Day-by-day breakdown across a week
+- Compare weekdays vs. weekends at a glance
+
+Both views show **consumption (blue) vs. solar generation (orange)** clearly to emphasize differences
+
+---
+
+### 💡 Insights Panel
+
+Key helpful metrics are summarized:
+
+- **Total Energy Used** – today or this week
+- **Solar Generated** – today or this week
+- **Comparison to yesterday / last week**
+  - _e.g._ “+7.4 kWh than yesterday”
+- **Comparison to your average**
+  - _e.g._ “3.1 kWh than average this month”
+
+Color-coded deltas make it clear whether usage went up (**🔴 red**) or down (**🟢 green**).
+
+---
+
+### 📂 CSV Upload
+
+- Upload your own 15-min smart meter CSV file
+- Or explore with provided examples:
+  - `low-winter-interval-data.csv`
+  - `high-winter-interval-data.csv`
+  - `solar-interval-data.csv` (with solar generation)
+
+---
+
+## 🖼️ Why It Matters
+
+Most customers only see their usage as a single number: **the bill**.  
+This dashboard breaks it down into:
+
+- **When** they use energy
+- **How much** they use or generate
+- **Compared to what** (yesterday, last week, typical average)
+
+… so they can actually understand and adjust their usage.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js **16+**
+- npm or yarn
+
+### Installation
+
+```bash
+git clone https://github.com/gpsugy/my-energy-story.git
+cd my-energy-story
+npm install
+```
+
+### Run locally
+
+```bash
+npm run dev
+```
+
+Then open http://localhost:5173.
+
+## 🛠️ Tech Stack
+
+⚛️ React (Vite) – fast, modern setup
+
+📊 Recharts – interactive daily/weekly charts
+
+📂 PapaParse – parses 15-minute CSV interval data
+
+🎨 Bootstrap 5 – responsive layout and styling
+
+⏱ date-fns – time interval parsing/formatting
+
+🌐 Vercel – one-click deploy & hosting
+
+## 📄 License
+
+[MIT](./LICENSE)
