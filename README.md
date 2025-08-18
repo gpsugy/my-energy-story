@@ -4,6 +4,8 @@ A clean React dashboard that helps users understand their electricity usage and 
 
 Instead of staring at rows of CSV data, customers get an **interactive, performant, visual story** of when and how they use energy — with insights that would be of particular helpfulness to energy users.
 
+🌐 **Live Demo** → [gpsugy-my-energy-story.vercel.app](https://gpsugy-my-energy-story.vercel.app)
+
 ---
 
 ## 📸 Screenshots
