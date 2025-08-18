@@ -63,11 +63,13 @@ export default function EnergyChart(props: EnergyChartProps) {
 
             <ReferenceLine y={0} stroke={APP_TEXT_COLOR} strokeDasharray="3 3" />
             <Tooltip
-              content={({ active, payload, label }) => {
+              content={({ active, payload }) => {
                 if (active && payload && payload.length) {
-                  const value = payload[0].value as number;
-                  const abs = Math.abs(value).toFixed(1);
-                  const isNegative = value < 0;
+                  // The first payload element contains all the data
+                  const data = payload[0].payload;
+                  const consumption = data.consumption.toFixed(1) || 0;
+                  const generation = data.generation.toFixed(1) || 0;
+                  const netEnergy = data.consumption - data.generation || 0;
 
                   return (
                     <div
@@ -80,12 +82,43 @@ export default function EnergyChart(props: EnergyChartProps) {
                         fontSize: 14,
                       }}
                     >
-                      <p style={{ color: isNegative ? APP_SOLAR_COLOR : APP_CONSUMPTION_COLOR, margin: 0 }}>
-                        <strong>
-                          {isNegative ? '↓' : '↑'} {abs} kWh
-                        </strong>
-                        <span style={{ marginLeft: '8px' }}>{isNegative ? 'Solar Generated' : 'Energy Used'}</span>
-                      </p>
+                      {/* Energy Used */}
+                      {consumption > 0 && (
+                        <p style={{ color: APP_CONSUMPTION_COLOR, margin: 0 }}>
+                          <strong>↑ {consumption} kWh</strong>
+                          <span style={{ marginLeft: '8px' }}>Energy Used</span>
+                        </p>
+                      )}
+
+                      {/* Solar Generated */}
+                      {generation > 0 && (
+                        <p
+                          style={{
+                            color: APP_SOLAR_COLOR,
+                            margin: consumption > 0 ? '8px 0 0 0' : 0,
+                          }}
+                        >
+                          <strong>↓ {generation} kWh</strong>
+                          <span style={{ marginLeft: '8px' }}>Solar Generated</span>
+                        </p>
+                      )}
+
+                      {/* Net Energy — only when both consumption/generation exist */}
+                      {consumption > 0 && generation > 0 && (
+                        <p
+                          style={{
+                            margin: '8px 0 0 0',
+                            color: netEnergy > 0 ? APP_CONSUMPTION_COLOR : APP_SOLAR_COLOR,
+                            borderTop: '1px solid #eee',
+                            paddingTop: '8px',
+                          }}
+                        >
+                          <strong>
+                            {netEnergy > 0 ? '↑' : '↓'} {Math.abs(netEnergy).toFixed(1)} kWh
+                          </strong>
+                          <span style={{ marginLeft: '8px' }}>Net Energy</span>
+                        </p>
+                      )}
                     </div>
                   );
                 }
