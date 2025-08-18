@@ -38,9 +38,9 @@ Both views show **consumption (blue) vs. solar generation (orange)** clearly to 
 
 ---
 
-### 💡 Insights Panel
+### 💡 Energy Insights
 
-Key helpful metrics are summarized:
+Key helpful metrics are summarized in the "Energy Insights" Panel:
 
 - **Total Energy Used** – today or this week
 - **Solar Generated** – today or this week
