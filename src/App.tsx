@@ -51,17 +51,18 @@ function App() {
     }
   };
 
+  const loadDefaultData = async () => {
+    try {
+      const res = await fetch(DEFAULT_CSV_DATA_PATH);
+      const text = await res.text();
+      const data = await parseCSV(text);
+      setEnergyData(data);
+    } catch (err) {
+      console.error('Error loading default data:', err);
+    }
+  };
+
   useEffect(() => {
-    const loadDefaultData = async () => {
-      try {
-        const res = await fetch(DEFAULT_CSV_DATA_PATH);
-        const text = await res.text();
-        const data = await parseCSV(text);
-        setEnergyData(data);
-      } catch (err) {
-        console.error('Error loading default data:', err);
-      }
-    };
     loadDefaultData();
   }, []);
 
@@ -122,7 +123,7 @@ function App() {
 
           <div className="file-controls">
             <FileUploader onFileSelect={(file) => loadData(file)} buttonClass="upload-button" />
-            <button onClick={() => loadData(DEFAULT_CSV_DATA_PATH)} className="default-data-button">
+            <button onClick={loadDefaultData} className="upload-button load-default-data-button">
               Load Default Data
             </button>
           </div>

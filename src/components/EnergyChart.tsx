@@ -73,17 +73,14 @@ export default function EnergyChart(props: EnergyChartProps) {
                     <div
                       style={{
                         backgroundColor: 'white',
-                        padding: '0 18px 16px 18px',
+                        padding: '16px 18px',
                         border: 'none',
                         borderRadius: '4px',
                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                         fontSize: 14,
                       }}
                     >
-                      <p>
-                        <strong>{label}</strong>
-                      </p>
-                      <p style={{ color: isNegative ? APP_SOLAR_COLOR : APP_CONSUMPTION_COLOR }}>
+                      <p style={{ color: isNegative ? APP_SOLAR_COLOR : APP_CONSUMPTION_COLOR, margin: 0 }}>
                         <strong>
                           {isNegative ? '↓' : '↑'} {abs} kWh
                         </strong>

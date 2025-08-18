@@ -1,4 +1,3 @@
-/* FileUploader.tsx */
 interface FileUploaderProps {
   onFileSelect: (file: File) => void;
   buttonClass?: string;
