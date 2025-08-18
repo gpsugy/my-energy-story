@@ -32,9 +32,9 @@ export default function EnergyChart(props: EnergyChartProps) {
   }, [currentKey, grouping, data, dailyConsumption, dailyGenerations]);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-full">
-      <h3 className="text-xl font-semibold text-gray-800 mb-6">Energy Usage</h3>
-      <div className="h-96 lg:h-[400px]">
+    <div className="energy-chart-container">
+      <h3 className="chart-title">Energy Usage</h3>
+      <div className="chart-wrapper">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -48,7 +48,7 @@ export default function EnergyChart(props: EnergyChartProps) {
             />
 
             <YAxis
-              domain={[-'auto', 'auto']} // Allow negative
+              domain={[-'auto', 'auto']}
               tickFormatter={(v) => Math.abs(v).toFixed(1)}
               axisLine={false}
               tick={{ fill: APP_TEXT_COLOR, fontSize: 12 }}
@@ -62,7 +62,6 @@ export default function EnergyChart(props: EnergyChartProps) {
             />
 
             <ReferenceLine y={0} stroke={APP_TEXT_COLOR} strokeDasharray="3 3" />
-            {/* Need to customize Tooltip for differentiating styling for +/- */}
             <Tooltip
               content={({ active, payload, label }) => {
                 if (active && payload && payload.length) {
@@ -96,13 +95,7 @@ export default function EnergyChart(props: EnergyChartProps) {
                 return null;
               }}
             />
-            <Bar
-              dataKey="netConsumption"
-              fill="#3b82f6" // Default color
-              stroke="none"
-              radius={[4, 4, 4, 4]}
-              isAnimationActive={true}
-            />
+            <Bar dataKey="netConsumption" fill="#3b82f6" stroke="none" radius={[4, 4, 4, 4]} isAnimationActive={true} />
           </BarChart>
         </ResponsiveContainer>
       </div>

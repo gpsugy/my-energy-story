@@ -12,16 +12,16 @@ const DEFAULT_CSV_DATA_PATH = '/solar-interval-data.csv';
 export const APP_TEXT_COLOR = '#434343ff';
 export const APP_CONSUMPTION_COLOR = '#3b82f6ff';
 export const APP_SOLAR_COLOR = '#fba824ff';
-export const APP_HEADER_BG = '#ecfdf5'; // Eco-green (Tailwind's emerald-50)
-export const APP_HEADER_BORDER = '#d1fae5'; // emerald-200
+export const APP_HEADER_BG = '#ecfdf5';
+export const APP_HEADER_BORDER = '#d1fae5';
 
 function App() {
   const [energyData, setEnergyData] = useState<EnergyData | null>(null);
-  const [dailyConsumption, setdailyConsumption] = useState<Map<string, number>>(new Map()); // { '2023-09-08': 30, ... }
-  const [dailyGenerations, setDailyGenerations] = useState<Map<string, number>>(new Map()); // { '2023-09-08': 20, ... }
-  const [weeklyConsumption, setweeklyConsumption] = useState<Map<string, number>>(new Map()); // { '2023-09-04': 150, ... }
-  const [dailyKeys, setDailyKeys] = useState<string[]>([]); // [ '2023-09-08', '2023-09-09', ... ]
-  const [weeklyKeys, setWeeklyKeys] = useState<string[]>([]); // [ '2023-09-04', '2023-09-11', ... ]
+  const [dailyConsumption, setdailyConsumption] = useState<Map<string, number>>(new Map());
+  const [dailyGenerations, setDailyGenerations] = useState<Map<string, number>>(new Map());
+  const [weeklyConsumption, setweeklyConsumption] = useState<Map<string, number>>(new Map());
+  const [dailyKeys, setDailyKeys] = useState<string[]>([]);
+  const [weeklyKeys, setWeeklyKeys] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [grouping, setGrouping] = useState<'daily' | 'weekly'>('daily');
 
@@ -39,11 +39,9 @@ function App() {
 
     const keys = grouping === 'daily' ? dailyKeys : weeklyKeys;
     const newIndex = keys.length - 1;
-    // Start with most recent
     setCurrentIndex(newIndex >= 0 ? newIndex : 0);
   }, [energyData, grouping]);
 
-  // Load specific CSV file
   const loadData = async (source: File | string): Promise<void> => {
     try {
       const data = await parseCSV(source);
@@ -67,7 +65,6 @@ function App() {
     loadDefaultData();
   }, []);
 
-  // Derived state - leave in the render
   const currentKeys = grouping === 'daily' ? dailyKeys : weeklyKeys;
   const currentKey = currentKeys[currentIndex] || '';
   const onPrev = () => (currentIndex > 0 ? setCurrentIndex(currentIndex - 1) : null);
@@ -76,25 +73,18 @@ function App() {
   const isNextDisabled = currentIndex >= currentKeys.length - 1;
 
   if (!currentKey) {
-    return <div className="text-gray-600">Loading...</div>;
+    return <div className="loading-message">Loading...</div>;
   }
 
   return (
-    <div className="bg-gray-100">
-      <header className="bg-emerald-600 px-8 py-4 shadow">
-        <div className="flex flex-wrap items-center justify-between gap-4 max-w-[2400px] mx-auto">
-          {/* Date + Navigation */}
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={onPrev}
-              disabled={isPrevDisabled}
-              className={`text-5xl font-bold text-white leading-none ${
-                isPrevDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'
-              }`}
-            >
+    <div className="app-wrapper">
+      <header className="header">
+        <div className="header-content">
+          <div className="date-navigation">
+            <button onClick={onPrev} disabled={isPrevDisabled} className="nav-button">
               {'‹'}
             </button>
-            <h2 className="text-lg font-semibold text-white">
+            <h2 className="date-display">
               {grouping === 'daily'
                 ? format(parseISO(currentKey), 'MMM d, yyyy')
                 : (() => {
@@ -104,27 +94,18 @@ function App() {
                     return `${format(start, 'MMM d')} – ${format(end, 'MMM d')}`;
                   })()}
             </h2>
-            <button
-              onClick={onNext}
-              disabled={isNextDisabled}
-              className={`text-5xl font-bold text-white leading-none ${
-                isNextDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'
-              }`}
-            >
-              {'›'} {/* Single right-pointing angle */}
+            <button onClick={onNext} disabled={isNextDisabled} className="nav-button">
+              {'›'}
             </button>
           </div>
 
-          {/* Grouping Toggle */}
-          <div className="flex items-center space-x-1 bg-transparent">
+          <div className="grouping-toggle">
             <button
               onClick={() => {
                 setGrouping('daily');
                 setCurrentIndex(dailyKeys.length - 1);
               }}
-              className={`px-4 py-2 text-sm font-medium text-white border-b-2 bg-transparent transition-colors ${
-                grouping === 'daily' ? 'border-white' : 'border-transparent hover:border-white'
-              }`}
+              className={`toggle-button ${grouping === 'daily' ? 'active' : ''}`}
             >
               DAY
             </button>
@@ -133,33 +114,24 @@ function App() {
                 setGrouping('weekly');
                 setCurrentIndex(weeklyKeys.length - 1);
               }}
-              className={`px-4 py-2 text-sm font-medium text-white border-b-2 bg-transparent transition-colors ${
-                grouping === 'weekly' ? 'border-white' : 'border-transparent hover:border-white'
-              }`}
+              className={`toggle-button ${grouping === 'weekly' ? 'active' : ''}`}
             >
               WEEK
             </button>
           </div>
 
-          <div className="flex items-center space-x-6">
-            <FileUploader
-              onFileSelect={(file) => loadData(file)}
-              buttonClass="bg-transparent text-white border border-white hover:bg-white hover:text-emerald-600 text-sm px-4 py-2"
-            />
-            <button
-              onClick={() => loadData(DEFAULT_CSV_DATA_PATH)}
-              className="text-sm text-white hover:underline bg-transparent"
-            >
+          <div className="file-controls">
+            <FileUploader onFileSelect={(file) => loadData(file)} buttonClass="upload-button" />
+            <button onClick={() => loadData(DEFAULT_CSV_DATA_PATH)} className="default-data-button">
               Load Default Data
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-[2400px] mx-auto px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-8">
+      <main className="container main-container">
+        <div className="content-grid">
+          <div>
             <EnergyChart
               data={energyData!}
               keys={currentKeys}
@@ -174,7 +146,7 @@ function App() {
               isNextDisabled={isNextDisabled}
             />
           </div>
-          <div className="lg:col-span-4">
+          <div>
             <EnergyInsights
               grouping={grouping}
               currentKey={currentKey}

@@ -1,4 +1,3 @@
-// components/EnergyInsights.tsx
 import { format, parseISO, startOfWeek } from 'date-fns';
 import { APP_CONSUMPTION_COLOR, APP_SOLAR_COLOR } from '../App';
 
@@ -34,7 +33,6 @@ export default function EnergyInsights({
     totalConsumption = dailyConsumption.get(currentKey) || 0;
     totalSolar = dailyGenerations.get(currentKey) || 0;
 
-    // --- Vs Yesterday ---
     const dailyKeys = Array.from(dailyConsumption.keys()).sort();
     const currentIndex = dailyKeys.indexOf(currentKey);
     const prevKey = dailyKeys[currentIndex - 1];
@@ -45,7 +43,6 @@ export default function EnergyInsights({
       comparisonLabel = 'than yesterday';
     }
 
-    // --- Vs Average This Week ---
     const weekStart = startOfWeek(parseISO(currentKey), { weekStartsOn: 1 });
     const weekKey = format(weekStart, 'yyyy-MM-dd');
     const weeklyTotal = weeklyConsumption.get(weekKey) || 0;
@@ -63,7 +60,6 @@ export default function EnergyInsights({
       totalSolar += dailyGenerations.get(dateKey) || 0;
     }
 
-    // --- Vs Last Week ---
     const weeklyKeys = Array.from(weeklyConsumption.keys()).sort();
     const currentIndex = weeklyKeys.indexOf(currentKey);
     const lastWeekKey = weeklyKeys[currentIndex - 1];
@@ -75,53 +71,44 @@ export default function EnergyInsights({
       comparisonLabel = 'than last week';
     }
 
-    // --- Vs Average This Month ---
     const weeklyValues = Array.from(weeklyConsumption.values());
-    // Calculate the average weekly consumption for the month
     const monthlyAvg = weeklyValues.reduce((a, b) => a + b, 0) / weeklyValues.length;
 
     avgDiff = thisWeekConsumption - monthlyAvg;
     avgLabel = 'than average this month';
   }
 
-  // Set colors: red if worse (used more), green if better
-  diffColor = diff > 0 ? 'text-red-600' : 'text-green-600';
-  avgDiffColor = avgDiff > 0 ? 'text-red-600' : 'text-green-600';
+  diffColor = diff > 0 ? 'text-red' : 'text-green';
+  avgDiffColor = avgDiff > 0 ? 'text-red' : 'text-green';
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-full">
-      <h3 className="text-xl font-semibold text-gray-800 mb-6">Energy Insights</h3>
-      <div className="flex space-x-4 mb-4">
-        <div
-          className="flex-1 flex flex-col items-center justify-center py-2 px-4 border border-gray-200 rounded-lg bg-gray-50 aspect-square max-h-32"
-          style={{ color: APP_CONSUMPTION_COLOR }}
-        >
-          <span className="text-sm font-medium text-gray-700">Energy Used</span>
-          <span className="text-lg font-bold mt-1">{formatKWh(totalConsumption)}</span>
+    <div className="energy-insights-container">
+      <h3 className="insights-title">Energy Insights</h3>
+      <div className="insight-cards">
+        <div className="insight-card" style={{ color: APP_CONSUMPTION_COLOR }}>
+          <span className="insight-label">Energy Used</span>
+          <span className="insight-value">{formatKWh(totalConsumption)}</span>
         </div>
-        <div
-          className="flex-1 flex flex-col items-center justify-center py-2 px-4 border border-gray-200 rounded-lg bg-gray-50 aspect-square max-h-32"
-          style={{ color: APP_SOLAR_COLOR }}
-        >
-          <span className="text-sm font-medium text-gray-700">Solar Generated</span>
-          <span className="text-lg font-bold mt-1">{formatKWh(totalSolar)}</span>
+        <div className="insight-card" style={{ color: APP_SOLAR_COLOR }}>
+          <span className="insight-label">Solar Generated</span>
+          <span className="insight-value">{formatKWh(totalSolar)}</span>
         </div>
       </div>
       {(comparisonLabel || avgLabel) && (
-        <div className="flex space-x-4">
+        <div className="insight-cards">
           {comparisonLabel && (
-            <div className="flex-1 flex flex-col items-center justify-center py-2 px-4 border border-gray-200 rounded-lg bg-gray-50 aspect-square max-h-32">
-              <div className="text-center mt-1">
-                <span className={`font-bold ${diffColor}`}>{formatDiff(diff)} kWh</span>
-                <span className="text-sm font-medium text-gray-700 block mt-0.5">{comparisonLabel}</span>
+            <div className="insight-card">
+              <div style={{ textAlign: 'center', marginTop: '4px' }}>
+                <span className={`comparison-value ${diffColor}`}>{formatDiff(diff)} kWh</span>
+                <span className="comparison-label">{comparisonLabel}</span>
               </div>
             </div>
           )}
           {avgLabel && (
-            <div className="flex-1 flex flex-col items-center justify-center py-2 px-4 border border-gray-200 rounded-lg bg-gray-50 aspect-square max-h-32">
-              <div className="text-center mt-1">
-                <span className={`font-bold ${avgDiffColor}`}>{formatDiff(avgDiff)} kWh</span>
-                <span className="text-sm font-medium text-gray-700 block mt-0.5">{avgLabel}</span>
+            <div className="insight-card">
+              <div style={{ textAlign: 'center', marginTop: '4px' }}>
+                <span className={`comparison-value ${avgDiffColor}`}>{formatDiff(avgDiff)} kWh</span>
+                <span className="comparison-label">{avgLabel}</span>
               </div>
             </div>
           )}
