@@ -113,7 +113,7 @@ export const getDisplayDate = (currentKey: string, grouping: 'daily' | 'weekly')
 
 // Aggregates 15-min data into hourly consumption for a given date
 // Returns: { hour: 0, consumption: 0.42 }, ... (24 items)
-export const getHourlyForDay = (
+export const getHourlyChartDataForDay = (
   data: EnergyData,
   targetDate: Date
 ): Array<{ hour: number; consumption: number; generation: number; netConsumption: number; fill: string }> => {
