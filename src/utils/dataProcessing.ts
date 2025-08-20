@@ -69,6 +69,7 @@ export const parseCSV = (input: File | string): Promise<EnergyData> => {
 
 // Build and load various data structures related to aggregating data from raw (15-min interval) energy data
 export const buildAggregateData = (data: EnergyData): buildAggregateDataReturn => {
+  // i.e. { '2025-04-22': 24.6, ... }
   const dailyConsumption = new Map<string, number>();
   const dailyGenerations = new Map<string, number>();
   const weeklyConsumption = new Map<string, number>();
@@ -84,6 +85,7 @@ export const buildAggregateData = (data: EnergyData): buildAggregateDataReturn =
     weeklyConsumption.set(weekKey, (weeklyConsumption.get(weekKey) || 0) + interval.consumption);
   }
 
+  // i.e. [ '2025-04-20', '2025-04-21', ... ]
   const dailyKeys = Array.from(dailyConsumption.keys()).sort();
   const weeklyKeys = Array.from(weeklyConsumption.keys()).sort();
 
