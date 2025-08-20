@@ -15,6 +15,7 @@ export interface buildAggregateDataReturn {
   dailyConsumption: Map<string, number>;
   dailyGenerations: Map<string, number>;
   weeklyConsumption: Map<string, number>;
+  weeklyGenerations: Map<string, number>;
   dailyKeys: string[];
   weeklyKeys: string[];
 }
@@ -73,6 +74,7 @@ export const buildAggregateData = (data: EnergyData): buildAggregateDataReturn =
   const dailyConsumption = new Map<string, number>();
   const dailyGenerations = new Map<string, number>();
   const weeklyConsumption = new Map<string, number>();
+  const weeklyGenerations = new Map<string, number>();
 
   for (const interval of data) {
     // Add to the totals for the day
@@ -83,6 +85,7 @@ export const buildAggregateData = (data: EnergyData): buildAggregateDataReturn =
     // Add to the total for the week
     const weekKey = format(startOfWeek(interval.datetime, { weekStartsOn: 1 }), 'yyyy-MM-dd');
     weeklyConsumption.set(weekKey, (weeklyConsumption.get(weekKey) || 0) + interval.consumption);
+    weeklyGenerations.set(weekKey, (weeklyGenerations.get(weekKey) || 0) + interval.generation);
   }
 
   // i.e. [ '2025-04-20', '2025-04-21', ... ]
@@ -93,6 +96,7 @@ export const buildAggregateData = (data: EnergyData): buildAggregateDataReturn =
     dailyConsumption,
     dailyGenerations,
     weeklyConsumption,
+    weeklyGenerations,
     dailyKeys,
     weeklyKeys,
   };
@@ -137,7 +141,7 @@ export const getHourlyForDay = (
 
 // Aggregates daily consumption totals for a given week
 // Returns: { day: 'Mon', consumption: 12.34 }, ... (7 items)
-export const getWeeklyChartData = (
+export const getDailyChartDataForWeek = (
   weekStart: Date,
   dailyConsumption: Map<string, number>,
   dailyGenerations: Map<string, number>

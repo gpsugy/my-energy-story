@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import FileUploader from './components/FileUploader';
 import EnergyChart from './components/EnergyChart';
-import { buildAggregateData, parseCSV } from './utils/dataProcessing';
+import { buildAggregateData, getDisplayDate, parseCSV } from './utils/dataProcessing';
 import { EnergyData } from './types/energy';
 
 import './App.css';
@@ -20,6 +20,7 @@ function App() {
   const [dailyConsumption, setdailyConsumption] = useState<Map<string, number>>(new Map());
   const [dailyGenerations, setDailyGenerations] = useState<Map<string, number>>(new Map());
   const [weeklyConsumption, setweeklyConsumption] = useState<Map<string, number>>(new Map());
+  const [weeklyGenerations, setWeeklyGenerations] = useState<Map<string, number>>(new Map());
   const [dailyKeys, setDailyKeys] = useState<string[]>([]);
   const [weeklyKeys, setWeeklyKeys] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -28,12 +29,13 @@ function App() {
   useEffect(() => {
     if (!energyData || energyData.length === 0) return;
 
-    const { dailyConsumption, dailyGenerations, weeklyConsumption, dailyKeys, weeklyKeys } =
+    const { dailyConsumption, dailyGenerations, weeklyConsumption, weeklyGenerations, dailyKeys, weeklyKeys } =
       buildAggregateData(energyData);
 
     setdailyConsumption(dailyConsumption);
     setDailyGenerations(dailyGenerations);
     setweeklyConsumption(weeklyConsumption);
+    setWeeklyGenerations(weeklyGenerations);
     setDailyKeys(dailyKeys);
     setWeeklyKeys(weeklyKeys);
 
@@ -88,12 +90,7 @@ function App() {
             <h2 className="date-display">
               {grouping === 'daily'
                 ? format(parseISO(currentKey), 'MMM d, yyyy')
-                : (() => {
-                    const start = parseISO(currentKey);
-                    const end = new Date(start);
-                    end.setDate(start.getDate() + 6);
-                    return `${format(start, 'MMM d')} – ${format(end, 'MMM d')}`;
-                  })()}
+                : getDisplayDate(currentKey, grouping)}
             </h2>
             <button onClick={onNext} disabled={isNextDisabled} className="nav-button">
               {'›'}
@@ -139,6 +136,7 @@ function App() {
               dailyConsumption={dailyConsumption}
               dailyGenerations={dailyGenerations}
               weeklyConsumption={weeklyConsumption}
+              weeklyGenerations={weeklyGenerations}
               grouping={grouping}
               currentIndex={currentIndex}
               onPrev={onPrev}
@@ -154,6 +152,7 @@ function App() {
               dailyConsumption={dailyConsumption}
               dailyGenerations={dailyGenerations}
               weeklyConsumption={weeklyConsumption}
+              weeklyGenerations={weeklyGenerations}
             />
           </div>
         </div>

@@ -7,12 +7,14 @@ export default function EnergyInsights({
   dailyConsumption,
   dailyGenerations,
   weeklyConsumption,
+  weeklyGenerations,
 }: {
   grouping: 'daily' | 'weekly';
   currentKey: string;
   dailyConsumption: Map<string, number>;
   dailyGenerations: Map<string, number>;
   weeklyConsumption: Map<string, number>;
+  weeklyGenerations: Map<string, number>;
 }) {
   const formatKWh = (kwh: number) => `~${kwh.toFixed(1)} kWh`;
   const formatDiff = (kwh: number) => {
@@ -51,14 +53,8 @@ export default function EnergyInsights({
     avgDiff = totalConsumption - weeklyAvg;
     avgLabel = 'than average this week';
   } else {
-    const weekStart = parseISO(currentKey);
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(weekStart);
-      date.setDate(weekStart.getDate() + i);
-      const dateKey = format(date, 'yyyy-MM-dd');
-      totalConsumption += dailyConsumption.get(dateKey) || 0;
-      totalSolar += dailyGenerations.get(dateKey) || 0;
-    }
+    totalConsumption = weeklyConsumption.get(currentKey) || 0;
+    totalSolar = weeklyGenerations.get(currentKey) || 0;
 
     const weeklyKeys = Array.from(weeklyConsumption.keys()).sort();
     const currentIndex = weeklyKeys.indexOf(currentKey);

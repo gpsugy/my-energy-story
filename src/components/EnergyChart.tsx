@@ -1,7 +1,7 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { EnergyData } from '../types/energy';
-import { getHourlyForDay, getWeeklyChartData } from '../utils/dataProcessing';
+import { getHourlyForDay, getDailyChartDataForWeek } from '../utils/dataProcessing';
 import { useMemo } from 'react';
 import { APP_CONSUMPTION_COLOR, APP_SOLAR_COLOR, APP_TEXT_COLOR } from '../App';
 
@@ -11,6 +11,7 @@ export interface EnergyChartProps {
   dailyConsumption: Map<string, number>;
   dailyGenerations: Map<string, number>;
   weeklyConsumption: Map<string, number>;
+  weeklyGenerations: Map<string, number>;
   grouping: 'daily' | 'weekly';
   currentIndex: number;
   onPrev: () => void;
@@ -20,7 +21,16 @@ export interface EnergyChartProps {
 }
 
 export default function EnergyChart(props: EnergyChartProps) {
-  const { data, keys, dailyConsumption, dailyGenerations, grouping, currentIndex } = props;
+  const {
+    data,
+    keys,
+    dailyConsumption,
+    dailyGenerations,
+    weeklyConsumption,
+    weeklyGenerations,
+    grouping,
+    currentIndex,
+  } = props;
   const currentKey = keys[currentIndex];
   if (!currentKey) return null;
 
@@ -28,7 +38,7 @@ export default function EnergyChart(props: EnergyChartProps) {
     if (grouping === 'daily') {
       return getHourlyForDay(data, parseISO(currentKey));
     }
-    return getWeeklyChartData(parseISO(currentKey), dailyConsumption, dailyGenerations);
+    return getDailyChartDataForWeek(parseISO(currentKey), dailyConsumption, dailyGenerations);
   }, [currentKey, grouping, data, dailyConsumption, dailyGenerations]);
 
   return (
