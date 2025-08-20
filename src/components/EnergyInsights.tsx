@@ -1,21 +1,16 @@
 import { format, parseISO, startOfWeek } from 'date-fns';
 import { APP_CONSUMPTION_COLOR, APP_SOLAR_COLOR } from '../App';
+import { EnergyData } from '../types/energy';
 
-export default function EnergyInsights({
-  grouping,
-  currentKey,
-  dailyConsumption,
-  dailyGenerations,
-  weeklyConsumption,
-  weeklyGenerations,
-}: {
+export interface EnergyInsightProps {
   grouping: 'daily' | 'weekly';
-  currentKey: string;
-  dailyConsumption: Map<string, number>;
-  dailyGenerations: Map<string, number>;
-  weeklyConsumption: Map<string, number>;
-  weeklyGenerations: Map<string, number>;
-}) {
+  currentIndex: number;
+  data: EnergyData | null;
+}
+
+export default function EnergyInsights({ grouping, currentIndex, data }: EnergyInsightProps) {
+  if (!data || currentIndex < 0) return null;
+
   const formatKWh = (kwh: number) => `~${kwh.toFixed(1)} kWh`;
   const formatDiff = (kwh: number) => {
     const abs = Math.abs(kwh).toFixed(1);
@@ -31,43 +26,40 @@ export default function EnergyInsights({
     avgDiff = 0,
     avgDiffColor = '';
 
-  if (grouping === 'daily') {
-    totalConsumption = dailyConsumption.get(currentKey) || 0;
-    totalSolar = dailyGenerations.get(currentKey) || 0;
+  const currentKey = grouping === 'daily' ? data.daily.keys[currentIndex] : data.weekly.keys[currentIndex];
+  if (!currentKey) return null;
 
-    const dailyKeys = Array.from(dailyConsumption.keys()).sort();
-    const currentIndex = dailyKeys.indexOf(currentKey);
-    const prevKey = dailyKeys[currentIndex - 1];
-    const yesterdayConsumption = prevKey ? dailyConsumption.get(prevKey) || 0 : 0;
+  if (grouping === 'daily') {
+    totalConsumption = data.daily.consumption.get(currentKey) || 0;
+    totalSolar = data.daily.generation.get(currentKey) || 0;
+
+    const prevKey = data.daily.keys[currentIndex - 1];
+    const yesterdayConsumption = prevKey ? data.daily.consumption.get(prevKey) || 0 : 0;
 
     if (prevKey) {
       diff = totalConsumption - yesterdayConsumption;
       comparisonLabel = 'than yesterday';
     }
 
-    const weekStart = startOfWeek(parseISO(currentKey), { weekStartsOn: 1 });
-    const weekKey = format(weekStart, 'yyyy-MM-dd');
-    const weeklyTotal = weeklyConsumption.get(weekKey) || 0;
+    const weeklyTotal = data.weekly.consumption.get(currentKey) || 0;
     const weeklyAvg = weeklyTotal / 7;
 
     avgDiff = totalConsumption - weeklyAvg;
     avgLabel = 'than average this week';
   } else {
-    totalConsumption = weeklyConsumption.get(currentKey) || 0;
-    totalSolar = weeklyGenerations.get(currentKey) || 0;
+    totalConsumption = data.weekly.consumption.get(currentKey) || 0;
+    totalSolar = data.weekly.generation.get(currentKey) || 0;
 
-    const weeklyKeys = Array.from(weeklyConsumption.keys()).sort();
-    const currentIndex = weeklyKeys.indexOf(currentKey);
-    const lastWeekKey = weeklyKeys[currentIndex - 1];
-    const lastWeekConsumption = lastWeekKey ? weeklyConsumption.get(lastWeekKey) || 0 : 0;
-    const thisWeekConsumption = weeklyConsumption.get(currentKey) || 0;
+    const lastWeekKey = data.weekly.keys[currentIndex - 1];
+    const lastWeekConsumption = lastWeekKey ? data.weekly.consumption.get(lastWeekKey) || 0 : 0;
+    const thisWeekConsumption = totalConsumption;
 
     if (lastWeekKey) {
       diff = thisWeekConsumption - lastWeekConsumption;
       comparisonLabel = 'than last week';
     }
 
-    const weeklyValues = Array.from(weeklyConsumption.values());
+    const weeklyValues = Array.from(data.weekly.consumption.values());
     const monthlyAvg = weeklyValues.reduce((a, b) => a + b, 0) / weeklyValues.length;
 
     avgDiff = thisWeekConsumption - monthlyAvg;

@@ -1,45 +1,30 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { format, parseISO } from 'date-fns';
-import { EnergyData } from '../types/energy';
+import { EnergyData, RawEnergyData } from '../types/energy';
 import { getHourlyChartDataForDay, getDailyChartDataForWeek } from '../utils/dataProcessing';
 import { useMemo } from 'react';
 import { APP_CONSUMPTION_COLOR, APP_SOLAR_COLOR, APP_TEXT_COLOR } from '../App';
 
 export interface EnergyChartProps {
-  data: EnergyData;
-  keys: string[];
-  dailyConsumption: Map<string, number>;
-  dailyGenerations: Map<string, number>;
-  weeklyConsumption: Map<string, number>;
-  weeklyGenerations: Map<string, number>;
+  rawData: RawEnergyData;
+  data: EnergyData | null;
   grouping: 'daily' | 'weekly';
   currentIndex: number;
-  onPrev: () => void;
-  onNext: () => void;
-  isPrevDisabled: boolean;
-  isNextDisabled: boolean;
 }
 
-export default function EnergyChart(props: EnergyChartProps) {
-  const {
-    data,
-    keys,
-    dailyConsumption,
-    dailyGenerations,
-    weeklyConsumption,
-    weeklyGenerations,
-    grouping,
-    currentIndex,
-  } = props;
+export default function EnergyChart({ rawData, data, grouping, currentIndex }: EnergyChartProps) {
+  if (!data) return null;
+
+  const keys = grouping === 'daily' ? data.daily.keys : data.weekly.keys;
   const currentKey = keys[currentIndex];
   if (!currentKey) return null;
 
   const chartData = useMemo(() => {
     if (grouping === 'daily') {
-      return getHourlyChartDataForDay(data, parseISO(currentKey));
+      return getHourlyChartDataForDay(rawData, parseISO(currentKey));
     }
-    return getDailyChartDataForWeek(parseISO(currentKey), dailyConsumption, dailyGenerations);
-  }, [currentKey, grouping, data, dailyConsumption, dailyGenerations]);
+    return getDailyChartDataForWeek(parseISO(currentKey), data.daily.consumption, data.daily.generation);
+  }, [currentKey, grouping, data]);
 
   return (
     <div className="energy-chart-container">

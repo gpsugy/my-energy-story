@@ -1,6 +1,6 @@
 import Papa from 'papaparse';
 import { parseISO, isSameDay, isValid, format, startOfWeek } from 'date-fns';
-import { EnergyData, EnergyInterval } from '../types/energy';
+import { RawEnergyData, EnergyInterval, EnergyData } from '../types/energy';
 import { APP_CONSUMPTION_COLOR, APP_SOLAR_COLOR } from '../App';
 
 interface RawEnergyRow {
@@ -11,17 +11,8 @@ interface RawEnergyRow {
   generation: string;
 }
 
-export interface buildAggregateDataReturn {
-  dailyConsumption: Map<string, number>;
-  dailyGenerations: Map<string, number>;
-  weeklyConsumption: Map<string, number>;
-  weeklyGenerations: Map<string, number>;
-  dailyKeys: string[];
-  weeklyKeys: string[];
-}
-
-// Parse a CSV file into typed EnergyData
-export const parseCSV = (input: File | string): Promise<EnergyData> => {
+// Parse a CSV file into typed RawEnergyData
+export const parseCSV = (input: File | string): Promise<RawEnergyData> => {
   return new Promise((resolve, reject) => {
     Papa.parse<RawEnergyRow>(input, {
       header: true,
@@ -69,7 +60,7 @@ export const parseCSV = (input: File | string): Promise<EnergyData> => {
 };
 
 // Build and load various data structures related to aggregating data from raw (15-min interval) energy data
-export const buildAggregateData = (data: EnergyData): buildAggregateDataReturn => {
+export const buildAggregateData = (data: RawEnergyData): EnergyData => {
   // i.e. { '2025-04-22': 24.6, ... }
   const dailyConsumption = new Map<string, number>();
   const dailyGenerations = new Map<string, number>();
@@ -93,12 +84,16 @@ export const buildAggregateData = (data: EnergyData): buildAggregateDataReturn =
   const weeklyKeys = Array.from(weeklyConsumption.keys()).sort();
 
   return {
-    dailyConsumption,
-    dailyGenerations,
-    weeklyConsumption,
-    weeklyGenerations,
-    dailyKeys,
-    weeklyKeys,
+    daily: {
+      keys: dailyKeys,
+      consumption: dailyConsumption,
+      generation: dailyGenerations,
+    },
+    weekly: {
+      keys: weeklyKeys,
+      consumption: weeklyConsumption,
+      generation: weeklyGenerations,
+    },
   };
 };
 
@@ -114,7 +109,7 @@ export const getDisplayDate = (currentKey: string, grouping: 'daily' | 'weekly')
 // Aggregates 15-min data into hourly consumption for a given date
 // Returns: { hour: 0, consumption: 0.42 }, ... (24 items)
 export const getHourlyChartDataForDay = (
-  data: EnergyData,
+  data: RawEnergyData,
   targetDate: Date
 ): Array<{ hour: number; consumption: number; generation: number; netConsumption: number; fill: string }> => {
   // Get all 15-min interval data for a specific targetDate

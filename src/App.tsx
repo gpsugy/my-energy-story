@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import FileUploader from './components/FileUploader';
 import EnergyChart from './components/EnergyChart';
 import { buildAggregateData, getDisplayDate, parseCSV } from './utils/dataProcessing';
-import { EnergyData } from './types/energy';
+import { EnergyData, RawEnergyData } from './types/energy';
 
 import './App.css';
 import EnergyInsights from './components/EnergyInsights';
@@ -16,38 +16,29 @@ export const APP_HEADER_BG = '#ecfdf5';
 export const APP_HEADER_BORDER = '#d1fae5';
 
 function App() {
+  const [rawData, setRawData] = useState<RawEnergyData | null>(null);
   const [energyData, setEnergyData] = useState<EnergyData | null>(null);
-  const [dailyConsumption, setdailyConsumption] = useState<Map<string, number>>(new Map());
-  const [dailyGenerations, setDailyGenerations] = useState<Map<string, number>>(new Map());
-  const [weeklyConsumption, setweeklyConsumption] = useState<Map<string, number>>(new Map());
-  const [weeklyGenerations, setWeeklyGenerations] = useState<Map<string, number>>(new Map());
-  const [dailyKeys, setDailyKeys] = useState<string[]>([]);
-  const [weeklyKeys, setWeeklyKeys] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [grouping, setGrouping] = useState<'daily' | 'weekly'>('daily');
 
   useEffect(() => {
-    if (!energyData || energyData.length === 0) return;
+    if (!rawData || rawData.length === 0) {
+      setEnergyData(null);
+      return;
+    }
 
-    const { dailyConsumption, dailyGenerations, weeklyConsumption, weeklyGenerations, dailyKeys, weeklyKeys } =
-      buildAggregateData(energyData);
+    const data = buildAggregateData(rawData);
+    setEnergyData(data);
 
-    setdailyConsumption(dailyConsumption);
-    setDailyGenerations(dailyGenerations);
-    setweeklyConsumption(weeklyConsumption);
-    setWeeklyGenerations(weeklyGenerations);
-    setDailyKeys(dailyKeys);
-    setWeeklyKeys(weeklyKeys);
-
-    const keys = grouping === 'daily' ? dailyKeys : weeklyKeys;
-    const newIndex = keys.length - 1;
+    const keys = grouping === 'daily' ? data.daily.keys : data.weekly.keys;
+    const newIndex = Math.max(0, keys.length - 1);
     setCurrentIndex(newIndex >= 0 ? newIndex : 0);
-  }, [energyData, grouping]);
+  }, [rawData, grouping]);
 
   const loadData = async (source: File | string): Promise<void> => {
     try {
       const data = await parseCSV(source);
-      setEnergyData(data);
+      setRawData(data);
     } catch (err) {
       console.error('Error loading data:', err);
     }
@@ -58,7 +49,7 @@ function App() {
       const res = await fetch(DEFAULT_CSV_DATA_PATH);
       const text = await res.text();
       const data = await parseCSV(text);
-      setEnergyData(data);
+      setRawData(data);
     } catch (err) {
       console.error('Error loading default data:', err);
     }
@@ -68,12 +59,14 @@ function App() {
     loadDefaultData();
   }, []);
 
-  const currentKeys = grouping === 'daily' ? dailyKeys : weeklyKeys;
+  // Derived state
+  const currentKeys = energyData ? (grouping === 'daily' ? energyData.daily.keys : energyData.weekly.keys) : [];
   const currentKey = currentKeys[currentIndex] || '';
-  const onPrev = () => (currentIndex > 0 ? setCurrentIndex(currentIndex - 1) : null);
-  const onNext = () => (currentIndex < currentKeys.length - 1 ? setCurrentIndex(currentIndex + 1) : null);
+
+  const onPrev = () => currentIndex > 0 && setCurrentIndex(currentIndex - 1);
+  const onNext = () => currentIndex < currentKeys.length - 1 && setCurrentIndex(currentIndex + 1);
   const isPrevDisabled = currentIndex === 0;
-  const isNextDisabled = currentIndex >= currentKeys.length - 1;
+  const isNextDisabled = !currentKeys || currentIndex >= currentKeys.length - 1;
 
   if (!currentKey) {
     return <div className="loading-message">Loading...</div>;
@@ -101,7 +94,9 @@ function App() {
             <button
               onClick={() => {
                 setGrouping('daily');
-                setCurrentIndex(dailyKeys.length - 1);
+                if (energyData) {
+                  setCurrentIndex(energyData.daily.keys.length - 1);
+                }
               }}
               className={`toggle-button ${grouping === 'daily' ? 'active' : ''}`}
             >
@@ -110,7 +105,9 @@ function App() {
             <button
               onClick={() => {
                 setGrouping('weekly');
-                setCurrentIndex(weeklyKeys.length - 1);
+                if (energyData) {
+                  setCurrentIndex(energyData.weekly.keys.length - 1);
+                }
               }}
               className={`toggle-button ${grouping === 'weekly' ? 'active' : ''}`}
             >
@@ -130,30 +127,10 @@ function App() {
       <main className="container main-container">
         <div className="content-grid">
           <div>
-            <EnergyChart
-              data={energyData!}
-              keys={currentKeys}
-              dailyConsumption={dailyConsumption}
-              dailyGenerations={dailyGenerations}
-              weeklyConsumption={weeklyConsumption}
-              weeklyGenerations={weeklyGenerations}
-              grouping={grouping}
-              currentIndex={currentIndex}
-              onPrev={onPrev}
-              onNext={onNext}
-              isPrevDisabled={isPrevDisabled}
-              isNextDisabled={isNextDisabled}
-            />
+            <EnergyChart rawData={rawData!} data={energyData} grouping={grouping} currentIndex={currentIndex} />
           </div>
           <div>
-            <EnergyInsights
-              grouping={grouping}
-              currentKey={currentKey}
-              dailyConsumption={dailyConsumption}
-              dailyGenerations={dailyGenerations}
-              weeklyConsumption={weeklyConsumption}
-              weeklyGenerations={weeklyGenerations}
-            />
+            <EnergyInsights data={energyData} grouping={grouping} currentIndex={currentIndex} />
           </div>
         </div>
       </main>
